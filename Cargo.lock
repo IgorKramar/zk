@@ -1478,4 +1478,5 @@ dependencies = [
  "serde_yaml",
  "tera",
  "toml",
+ "walkdir",
 ]

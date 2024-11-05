@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::fs;
 use std::io;
+use crate::templates::DEFAULT_NOTE_TEMPLATE;
 
 const CONFIG_FILENAME: &str = ".zkrc";
 
@@ -11,8 +12,12 @@ pub struct Config {
     pub notes_dir: PathBuf,
     /// Шаблон имени файла для новых заметок
     pub filename_template: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub templates_dir: Option<PathBuf>,
+    #[serde(default = "default_template_name")]
+    pub default_template: String,
+}
+
+fn default_template_name() -> String {
+    "default".to_string()
 }
 
 #[derive(Debug)]
@@ -57,7 +62,7 @@ impl Default for Config {
         Config {
             notes_dir: PathBuf::from("notes"),
             filename_template: "{timestamp}-{title}".to_string(),
-            templates_dir: None,
+            default_template: default_template_name(),
         }
     }
 }
@@ -79,19 +84,29 @@ impl Config {
     }
 
     /// Инициализирует новую конфигурацию в текущей директории
-    pub fn init(path: &Path) -> Result<Self, ConfigError> {
+    pub fn init(base_dir: &Path) -> Result<Self, ConfigError> {
         let config = Config::default();
-        let config_path = path.join(CONFIG_FILENAME);
-
+        let config_path = base_dir.join(CONFIG_FILENAME);
+        
         if config_path.exists() {
-            return Err(ConfigError::Message(
-                "Конфигурация уже существует".to_string()
-            ));
+            return Err(ConfigError::Message("Конфигурация уже существует".to_string()));
         }
 
-        let toml = toml::to_string_pretty(&config)?;
-        fs::write(&config_path, toml)?;
+        // Создаём директорию для заметок
+        fs::create_dir_all(base_dir.join(&config.notes_dir))?;
         
+        // Создаём директорию для шаблонов
+        fs::create_dir_all(base_dir.join(config.templates_dir()))?;
+        
+        // Создаём шаблон по умолчанию
+        let default_template = base_dir
+            .join(config.templates_dir())
+            .join("default.md");
+        fs::write(&default_template, DEFAULT_NOTE_TEMPLATE)?;
+
+        let toml = toml::to_string_pretty(&config)?;
+        fs::write(config_path, toml)?;
+
         Ok(config)
     }
 
@@ -141,5 +156,9 @@ impl Config {
     /// Возвращает строковое представление конфигурации
     pub fn to_string_pretty(&self) -> Result<String, ConfigError> {
         Ok(toml::to_string_pretty(&self)?)
+    }
+
+    pub fn templates_dir(&self) -> PathBuf {
+        PathBuf::from("_templates")
     }
 } 
