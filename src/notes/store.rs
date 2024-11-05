@@ -3,7 +3,8 @@ use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
 use regex::Regex;
-use crate::notes::metadata::NoteMetadata;
+use crate::notes::metadata::{NoteMetadata, Link};
+use serde_yaml;
 
 #[derive(Debug)]
 pub struct SearchQuery {
@@ -189,6 +190,114 @@ impl NoteStore {
         } else {
             Ok(None)
         }
+    }
+
+    pub fn add_link(&mut self, from: &str, to: &str, description: Option<String>) -> std::io::Result<()> {
+        // Проверяем существование обеих заметок
+        if !self.notes.contains_key(from) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Заметка с ID '{}' не найдена", from),
+            ));
+        }
+        if !self.notes.contains_key(to) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Заметка с ID '{}' не найдена", to),
+            ));
+        }
+
+        let path = self.notes.get(from).unwrap();
+        let content = fs::read_to_string(path)?;
+        let (mut metadata, note_content) = parse_frontmatter(&content)?;
+
+        // Добавляем связь, если её ещё нет
+        if !metadata.links.iter().any(|link| &link.to == to) {
+            metadata.links.push(Link {
+                from: from.to_string(),
+                to: to.to_string(),
+                description,
+            });
+
+            // Сохраняем обновленную заметку
+            let updated_content = format!(
+                "---\n{}\n---\n{}",
+                serde_yaml::to_string(&metadata).map_err(|e| std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    e.to_string(),
+                ))?,
+                note_content
+            );
+            fs::write(path, updated_content)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn remove_link(&mut self, from: &str, to: &str) -> std::io::Result<()> {
+        let path = self.notes.get(from).ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Заметка с ID '{}' не найдена", from),
+            )
+        })?;
+
+        let content = fs::read_to_string(path)?;
+        let (mut metadata, note_content) = parse_frontmatter(&content)?;
+
+        // Удаляем связь, если она есть
+        if let Some(pos) = metadata.links.iter().position(|link| &link.to == to) {
+            metadata.links.remove(pos);
+
+            // Сохраняем обновленную заметку
+            let updated_content = format!(
+                "---\n{}\n---\n{}",
+                serde_yaml::to_string(&metadata).map_err(|e| std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    e.to_string(),
+                ))?,
+                note_content
+            );
+            fs::write(path, updated_content)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn get_links(&self, id: &str, include_backlinks: bool) -> std::io::Result<Vec<Link>> {
+        let mut links = Vec::new();
+
+        // Получаем прямые связи
+        if let Some(path) = self.notes.get(id) {
+            let content = fs::read_to_string(path)?;
+            if let Ok((metadata, _)) = parse_frontmatter(&content) {
+                links.extend(metadata.links);
+            }
+        }
+
+        // Получаем обратные связи, если требуется
+        if include_backlinks {
+            for (note_id, path) in &self.notes {
+                if note_id == id {
+                    continue;
+                }
+
+                let content = fs::read_to_string(path)?;
+                if let Ok((metadata, _)) = parse_frontmatter(&content) {
+                    for link in metadata.links {
+                        if &link.to == id {
+                            links.push(Link {
+                                from: link.from,
+                                to: id.to_string(),
+                                description: link.description,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(links)
     }
 }
 

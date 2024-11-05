@@ -2,6 +2,24 @@ use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc, Local, NaiveDateTime, TimeZone};
 use serde::{Deserializer, Serializer};
 use uuid::Uuid;
+use std::fmt;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Link {
+    pub from: String,
+    pub to: String,
+    pub description: Option<String>,
+}
+
+impl fmt::Display for Link {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(desc) = &self.description {
+            write!(f, "{} -> {} ({})", self.from, self.to, desc)
+        } else {
+            write!(f, "{} -> {}", self.from, self.to)
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NoteMetadata {
@@ -12,7 +30,7 @@ pub struct NoteMetadata {
     #[serde(default)]
     pub tags: Vec<String>,
     #[serde(default)]
-    pub links: Vec<String>,
+    pub links: Vec<Link>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }

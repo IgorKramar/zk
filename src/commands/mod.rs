@@ -1,5 +1,5 @@
 use std::env;
-use crate::cli::{Commands, ConfigCommands, TemplateCommands, TagCommands};
+use crate::cli::{Commands, ConfigCommands, TemplateCommands, TagCommands, LinkCommands};
 use crate::config::{self, Config};
 use crate::notes;
 use crate::templates::TemplateEngine;
@@ -66,7 +66,7 @@ pub fn handle_command(command: Commands) {
                     let path = template_engine.get_template_path(&name);
                     if !path.exists() {
                         match template_engine.create_template(&name) {
-                            Ok(()) => println!("Создан новый ��аблон '{}'", name),
+                            Ok(()) => println!("Создан новый аблон '{}'", name),
                             Err(e) => {
                                 eprintln!("Ошибка при создании шаблона: {}", e);
                                 return;
@@ -165,7 +165,7 @@ pub fn handle_command(command: Commands) {
                         println!("Теги: {}", metadata.tags.join(", "));
                     }
                     if !metadata.links.is_empty() {
-                        println!("Связи: {}", metadata.links.join(", "));
+                        println!("Связи: {}", metadata.links.iter().map(|link| link.to_string()).collect::<Vec<_>>().join(", "));
                     }
                     if let Some(desc) = metadata.description {
                         println!("Описание: {}", desc);
@@ -246,7 +246,7 @@ pub fn handle_command(command: Commands) {
                                 println!("Теги: {}", note.metadata.tags.join(", "));
                             }
 
-                            // Показываем фрагмент с совпадением
+                            // Показываем фрагмент с совпаднием
                             if !note.content_matches.is_empty() {
                                 for &(start, end) in &note.content_matches {
                                     let preview_start = start.saturating_sub(50);
@@ -263,6 +263,69 @@ pub fn handle_command(command: Commands) {
                     }
                 }
                 Err(e) => eprintln!("Ошибка при поиске заметок: {}", e),
+            }
+        }
+        Commands::Link { command } => {
+            let config = match Config::load() {
+                Ok(config) => config,
+                Err(e) => {
+                    eprintln!("Ошибка загрузки конфигурации: {}", e);
+                    return;
+                }
+            };
+
+            let mut store = match NoteStore::new(config.notes_dir) {
+                Ok(store) => store,
+                Err(e) => {
+                    eprintln!("Ошибка инициализации хранилища заметок: {}", e);
+                    return;
+                }
+            };
+
+            match command {
+                LinkCommands::Add { from, to, description } => {
+                    match store.add_link(&from, &to, description) {
+                        Ok(()) => println!("Связь добавлена"),
+                        Err(e) => eprintln!("Ошибка при добавлении связи: {}", e),
+                    }
+                }
+                LinkCommands::Remove { from, to } => {
+                    match store.remove_link(&from, &to) {
+                        Ok(()) => println!("Связь удалена"),
+                        Err(e) => eprintln!("Ошибка при удалении связи: {}", e),
+                    }
+                }
+                LinkCommands::Show { id, backlinks } => {
+                    match store.get_links(&id, backlinks) {
+                        Ok(links) => {
+                            if links.is_empty() {
+                                println!("Связи не найдены");
+                            } else {
+                                println!("Связи для заметки {}:", id);
+                                for link in links {
+                                    let direction = if link.from == id {
+                                        "→"
+                                    } else {
+                                        "←"
+                                    };
+                                    
+                                    let other_note = if link.from == id {
+                                        &link.to
+                                    } else {
+                                        &link.from
+                                    };
+
+                                    if let Some(desc) = link.description {
+                                        println!("  {} {} ({})", direction, other_note, desc);
+                                    } else {
+                                        println!("  {} {}", direction, other_note);
+                                    }
+                                }
+                            }
+                        }
+                        Err(e) => eprintln!("Ошибка при получении связей: {}", e),
+                    }
+                }
             }
         }
     }
@@ -294,7 +357,7 @@ fn handle_config(config_cmd: ConfigCommands) {
         }
         ConfigCommands::Set { key, value } => {
             match config.set(&key, &value) {
-                Ok(()) => println!("Параметр {} ус��ешно обновлен", key),
+                Ok(()) => println!("Параметр {} усешно обновлен", key),
                 Err(e) => eprintln!("Ошибка обновления параметра: {}", e),
             }
         }

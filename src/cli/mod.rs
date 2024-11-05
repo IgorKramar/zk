@@ -53,6 +53,11 @@ pub enum Commands {
         #[arg(short = 'r', long = "regex")]
         use_regex: bool,
     },
+    /// Управление связями между заметками
+    Link {
+        #[command(subcommand)]
+        command: LinkCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -109,4 +114,33 @@ pub enum TagCommands {
     },
     /// Показать все теги в базе знаний
     List,
+}
+
+#[derive(Subcommand)]
+pub enum LinkCommands {
+    /// Добавить связь между заметками
+    Add {
+        /// ID исходной заметки
+        from: String,
+        /// ID целевой заметки
+        to: String,
+        /// Описание связи (опционально)
+        #[arg(short, long)]
+        description: Option<String>,
+    },
+    /// Удалить связь между заметками
+    Remove {
+        /// ID исходной заметки
+        from: String,
+        /// ID целевой заметки
+        to: String,
+    },
+    /// Показать связи заметки
+    Show {
+        /// ID заметки
+        id: String,
+        /// Показать также обратные связи
+        #[arg(short, long)]
+        backlinks: bool,
+    },
 } 
