@@ -18,9 +18,18 @@ pub enum SearchPattern {
     Regex(Regex),
 }
 
+#[derive(Debug)]
+pub struct SearchMatch {
+    pub metadata: NoteMetadata,
+    pub content: String,
+    pub title_matches: Vec<(usize, usize)>,   // (start, end) индексы совпадений
+    pub content_matches: Vec<(usize, usize)>, // (start, end) индексы совпадений
+}
+
 impl SearchPattern {
     pub fn new(pattern: String, use_regex: bool) -> Result<Self, regex::Error> {
         if use_regex {
+            // Конвертируем glob-подобные паттерны в регулярные выражения
             let regex_pattern = if !pattern.contains("\\") {
                 pattern
                     .replace("*", ".*")
@@ -45,12 +54,21 @@ impl SearchPattern {
         }
     }
 
-    pub fn matches(&self, text: &str) -> bool {
+    pub fn find_matches(&self, text: &str) -> Vec<(usize, usize)> {
         match self {
             SearchPattern::Plain(pattern) => {
-                text.to_lowercase().contains(&pattern.to_lowercase())
+                let pattern = pattern.to_lowercase();
+                let text_lower = text.to_lowercase();
+                text_lower
+                    .match_indices(&pattern)
+                    .map(|(idx, matched)| (idx, idx + matched.len()))
+                    .collect()
             }
-            SearchPattern::Regex(regex) => regex.is_match(text),
+            SearchPattern::Regex(regex) => {
+                regex.find_iter(text)
+                    .map(|m| (m.start(), m.end()))
+                    .collect()
+            }
         }
     }
 }
@@ -88,9 +106,8 @@ impl NoteStore {
         Ok(())
     }
 
-    pub fn search(&self, query: &SearchQuery) -> std::io::Result<Vec<(NoteMetadata, String)>> {
+    pub fn search(&self, query: &SearchQuery) -> std::io::Result<Vec<SearchMatch>> {
         let mut results = Vec::new();
-
         let tags_set = query.tags.as_ref().map(|tags| {
             tags.iter().collect::<std::collections::HashSet<_>>()
         });
@@ -98,6 +115,9 @@ impl NoteStore {
         for path in self.notes.values() {
             let content = fs::read_to_string(path)?;
             if let Ok((metadata, note_content)) = parse_frontmatter(&content) {
+                let mut title_matches = Vec::new();
+                let mut content_matches = Vec::new();
+                
                 let matches = {
                     // Проверка тегов
                     let tags_match = tags_set.as_ref().map_or(true, |search_tags| {
@@ -106,26 +126,51 @@ impl NoteStore {
                     });
 
                     // Проверка заголовка
-                    let title_match = query.title.as_ref().map_or(true, |pattern| {
-                        pattern.matches(&metadata.title)
-                    });
+                    let title_match = if let Some(pattern) = &query.title {
+                        let found_matches = pattern.find_matches(&metadata.title);
+                        if !found_matches.is_empty() {
+                            title_matches = found_matches;
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        true
+                    };
 
                     // Проверка содержимого
-                    let content_match = query.content.as_ref().map_or(true, |pattern| {
-                        pattern.matches(&note_content) ||
-                        metadata.description.as_ref().map_or(false, |desc| pattern.matches(desc))
-                    });
+                    let content_match = if let Some(pattern) = &query.content {
+                        let mut found = false;
+                        if let Some(matches) = pattern.find_matches(&note_content).into_iter().next() {
+                            content_matches.push(matches);
+                            found = true;
+                        }
+                        if let Some(desc) = &metadata.description {
+                            if let Some(matches) = pattern.find_matches(desc).into_iter().next() {
+                                content_matches.push(matches);
+                                found = true;
+                            }
+                        }
+                        found
+                    } else {
+                        true
+                    };
 
-                    tags_match && title_match && content_match
+                    tags_match && (title_match || content_match)
                 };
 
                 if matches {
-                    results.push((metadata, note_content));
+                    results.push(SearchMatch {
+                        metadata,
+                        content: note_content,
+                        title_matches,
+                        content_matches,
+                    });
                 }
             }
         }
 
-        results.sort_by(|a, b| b.0.created.cmp(&a.0.created));
+        results.sort_by(|a, b| b.metadata.created.cmp(&a.metadata.created));
         Ok(results)
     }
 

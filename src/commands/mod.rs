@@ -7,6 +7,7 @@ use crate::editor;
 use crate::tags;
 use crate::notes::store::{NoteStore, SearchQuery, SearchPattern};
 use chrono::Local;
+use colored::*;
 
 pub fn handle_command(command: Commands) {
     match command {
@@ -65,7 +66,7 @@ pub fn handle_command(command: Commands) {
                     let path = template_engine.get_template_path(&name);
                     if !path.exists() {
                         match template_engine.create_template(&name) {
-                            Ok(()) => println!("Создан новый шаблон '{}'", name),
+                            Ok(()) => println!("Создан новый ��аблон '{}'", name),
                             Err(e) => {
                                 eprintln!("Ошибка при создании шаблона: {}", e);
                                 return;
@@ -231,25 +232,32 @@ pub fn handle_command(command: Commands) {
                         println!("Заметки не найдены");
                     } else {
                         println!("Найдены заметки:");
-                        for (note, content) in notes {
-                            println!("\nID: {} ({})", note.id, note.created.format("%Y-%m-%d %H:%M"));
-                            println!("Заголовок: {}", note.title);
-                            if !note.tags.is_empty() {
-                                println!("Теги: {}", note.tags.join(", "));
-                            }
-                            if let Some(desc) = note.description {
-                                println!("Описание: {}", desc);
-                            }
+                        for note in notes {
+                            println!("\nID: {} ({})", 
+                                note.metadata.id, 
+                                note.metadata.created.format("%Y-%m-%d %H:%M")
+                            );
                             
-                            // Показываем фрагмент содержимого, если искали по нему
-                            if query.content.is_some() {
-                                let preview = content
-                                    .lines()
-                                    .filter(|line| !line.trim().is_empty())
-                                    .take(3)
-                                    .collect::<Vec<_>>()
-                                    .join("\n");
-                                println!("Фрагмент:\n{}", preview);
+                            // Подсвечиваем совпадения в заголовке
+                            let title = highlight_matches(&note.metadata.title, &note.title_matches);
+                            println!("Заголовок: {}", title);
+
+                            if !note.metadata.tags.is_empty() {
+                                println!("Теги: {}", note.metadata.tags.join(", "));
+                            }
+
+                            // Показываем фрагмент с совпадением
+                            if !note.content_matches.is_empty() {
+                                for &(start, end) in &note.content_matches {
+                                    let preview_start = start.saturating_sub(50);
+                                    let preview_end = (end + 50).min(note.content.len());
+                                    let preview = &note.content[preview_start..preview_end];
+                                    
+                                    let relative_match = (start - preview_start, end - preview_start);
+                                    let highlighted = highlight_matches(preview, &[relative_match]);
+                                    
+                                    println!("Совпадение: ...{}...", highlighted);
+                                }
                             }
                         }
                     }
@@ -286,9 +294,30 @@ fn handle_config(config_cmd: ConfigCommands) {
         }
         ConfigCommands::Set { key, value } => {
             match config.set(&key, &value) {
-                Ok(()) => println!("Параметр {} успешно обновлен", key),
+                Ok(()) => println!("Параметр {} ус��ешно обновлен", key),
                 Err(e) => eprintln!("Ошибка обновления параметра: {}", e),
             }
         }
     }
+}
+
+fn highlight_matches(text: &str, matches: &[(usize, usize)]) -> String {
+    if matches.is_empty() {
+        return text.to_string();
+    }
+
+    let mut result = String::new();
+    let mut last_end = 0;
+
+    for &(start, end) in matches {
+        // Добавляем текст до совпадения
+        result.push_str(&text[last_end..start]);
+        // Добавляем подсвеченное совпадение
+        result.push_str(&text[start..end].on_yellow().black().to_string());
+        last_end = end;
+    }
+    // Добавляем оставшийся текст
+    result.push_str(&text[last_end..]);
+
+    result
 } 
