@@ -5,7 +5,7 @@ use crate::notes;
 use crate::templates::TemplateEngine;
 use crate::editor;
 use crate::tags;
-use crate::notes::store::{NoteStore, SearchQuery};
+use crate::notes::store::{NoteStore, SearchQuery, SearchPattern};
 use chrono::Local;
 
 pub fn handle_command(command: Commands) {
@@ -178,7 +178,7 @@ pub fn handle_command(command: Commands) {
                 }
             }
         }
-        Commands::Search { tags, title, content } => {
+        Commands::Search { tags, title, content, use_regex } => {
             let config = match Config::load() {
                 Ok(config) => config,
                 Err(e) => {
@@ -195,7 +195,36 @@ pub fn handle_command(command: Commands) {
                 }
             };
 
-            let query = SearchQuery { tags, title, content };
+            let title_pattern = if let Some(title) = title {
+                match SearchPattern::new(title, use_regex) {
+                    Ok(pattern) => Some(pattern),
+                    Err(e) => {
+                        eprintln!("Ошибка в регулярном выражении для заголовка: {}", e);
+                        return;
+                    }
+                }
+            } else {
+                None
+            };
+
+            let content_pattern = if let Some(content) = content {
+                match SearchPattern::new(content, use_regex) {
+                    Ok(pattern) => Some(pattern),
+                    Err(e) => {
+                        eprintln!("Ошибка в регулярном выражении для содержимого: {}", e);
+                        return;
+                    }
+                }
+            } else {
+                None
+            };
+
+            let query = SearchQuery {
+                tags,
+                title: title_pattern,
+                content: content_pattern,
+            };
+
             match store.search(&query) {
                 Ok(notes) => {
                     if notes.is_empty() {

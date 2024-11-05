@@ -48,6 +48,10 @@ pub enum Commands {
         /// Поиск по содержимому
         #[arg(short = 'c', long = "content")]
         content: Option<String>,
+
+        /// Использовать регулярные выражения для поиска
+        #[arg(short = 'r', long = "regex")]
+        use_regex: bool,
     },
 }
 

@@ -2,13 +2,57 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
+use regex::Regex;
 use crate::notes::metadata::NoteMetadata;
 
 #[derive(Debug)]
 pub struct SearchQuery {
     pub tags: Option<Vec<String>>,
-    pub title: Option<String>,
-    pub content: Option<String>,
+    pub title: Option<SearchPattern>,
+    pub content: Option<SearchPattern>,
+}
+
+#[derive(Debug)]
+pub enum SearchPattern {
+    Plain(String),
+    Regex(Regex),
+}
+
+impl SearchPattern {
+    pub fn new(pattern: String, use_regex: bool) -> Result<Self, regex::Error> {
+        if use_regex {
+            let regex_pattern = if !pattern.contains("\\") {
+                pattern
+                    .replace("*", ".*")
+                    .replace("?", ".")
+                    .replace("+", "\\+")
+                    .replace("(", "\\(")
+                    .replace(")", "\\)")
+                    .replace("[", "\\[")
+                    .replace("]", "\\]")
+                    .replace("{", "\\{")
+                    .replace("}", "\\}")
+                    .replace("^", "\\^")
+                    .replace("$", "\\$")
+                    .replace("|", "\\|")
+            } else {
+                pattern
+            };
+            
+            Ok(SearchPattern::Regex(Regex::new(&regex_pattern)?))
+        } else {
+            Ok(SearchPattern::Plain(pattern))
+        }
+    }
+
+    pub fn matches(&self, text: &str) -> bool {
+        match self {
+            SearchPattern::Plain(pattern) => {
+                text.to_lowercase().contains(&pattern.to_lowercase())
+            }
+            SearchPattern::Regex(regex) => regex.is_match(text),
+        }
+    }
 }
 
 pub struct NoteStore {
@@ -47,7 +91,6 @@ impl NoteStore {
     pub fn search(&self, query: &SearchQuery) -> std::io::Result<Vec<(NoteMetadata, String)>> {
         let mut results = Vec::new();
 
-        // Подготовим теги для поиска, если они есть
         let tags_set = query.tags.as_ref().map(|tags| {
             tags.iter().collect::<std::collections::HashSet<_>>()
         });
@@ -55,7 +98,6 @@ impl NoteStore {
         for path in self.notes.values() {
             let content = fs::read_to_string(path)?;
             if let Ok((metadata, note_content)) = parse_frontmatter(&content) {
-                // Проверяем соответствие всем критериям поиска
                 let matches = {
                     // Проверка тегов
                     let tags_match = tags_set.as_ref().map_or(true, |search_tags| {
@@ -64,17 +106,14 @@ impl NoteStore {
                     });
 
                     // Проверка заголовка
-                    let title_match = query.title.as_ref().map_or(true, |search_title| {
-                        metadata.title.to_lowercase().contains(&search_title.to_lowercase())
+                    let title_match = query.title.as_ref().map_or(true, |pattern| {
+                        pattern.matches(&metadata.title)
                     });
 
                     // Проверка содержимого
-                    let content_match = query.content.as_ref().map_or(true, |search_content| {
-                        let search_lower = search_content.to_lowercase();
-                        note_content.to_lowercase().contains(&search_lower) ||
-                        metadata.description.as_ref().map_or(false, |desc| 
-                            desc.to_lowercase().contains(&search_lower)
-                        )
+                    let content_match = query.content.as_ref().map_or(true, |pattern| {
+                        pattern.matches(&note_content) ||
+                        metadata.description.as_ref().map_or(false, |desc| pattern.matches(desc))
                     });
 
                     tags_match && title_match && content_match
@@ -86,7 +125,6 @@ impl NoteStore {
             }
         }
 
-        // Сортируем результаты по дате создания (новые сначала)
         results.sort_by(|a, b| b.0.created.cmp(&a.0.created));
         Ok(results)
     }

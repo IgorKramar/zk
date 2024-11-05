@@ -1483,6 +1483,7 @@ dependencies = [
  "clap",
  "config",
  "directories",
+ "regex",
  "serde",
  "serde_yaml",
  "tera",
