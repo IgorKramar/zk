@@ -2,3 +2,5 @@
 
 .zkrc
 .config/zk
+
+releases/*

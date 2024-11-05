@@ -13,9 +13,25 @@ ZK (Zettelkasten) - это инструмент командной строки 
 
 ## Установка
 
+### Установка из репозитория
 ```bash
 cargo install --git https://github.com/IgorKramar/zk
 ```
+### Установка из бинарных файлов
+
+1. Скачайте последнюю версию для вашей платформы:
+   - [Linux (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-linux-x86_64.tar.gz)
+   - [Windows (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-windows-x86_64.zip)
+
+2. Распакуйте архив:
+
+#### Linux/macOS
+```bash
+tar xzf zk-*-x86_64.tar.gz
+sudo mv zk /usr/local/bin/
+```
+#### Windows
+Распакуйте zip-файл и добавьте путь к zk.exe в PATH
 
 ## Использование
 

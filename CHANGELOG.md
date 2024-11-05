@@ -5,7 +5,7 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 и этот проект следует [Semantic Versioning](https://semver.org/lang/ru/).
 
-## [0.1.0] - 2024-03-19
+## [0.1.0] - 2024-11-05
 
 ### Добавлено
 - Базовая структура проекта
