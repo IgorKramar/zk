@@ -122,7 +122,7 @@ description: Краткое описание заметки
 
 ```bash
 # Обновить до последней версии
-cargo install --force --git https://github.com/yourusername/zk
+cargo install --force --git https://github.com/IgorKramar/zk
 
 # Или, если репозиторий уже склонирован локально:
 cd path/to/zk
