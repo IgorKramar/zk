@@ -14,6 +14,8 @@ pub struct Config {
     pub filename_template: String,
     #[serde(default = "default_template_name")]
     pub default_template: String,
+    #[serde(default)]
+    pub active_note: Option<String>,
 }
 
 fn default_template_name() -> String {
@@ -63,6 +65,7 @@ impl Default for Config {
             notes_dir: PathBuf::from("notes"),
             filename_template: "{timestamp}-{title}".to_string(),
             default_template: default_template_name(),
+            active_note: None,
         }
     }
 }
@@ -160,5 +163,14 @@ impl Config {
 
     pub fn templates_dir(&self) -> PathBuf {
         PathBuf::from("_templates")
+    }
+
+    pub fn get_active_note(&self) -> Option<&str> {
+        self.active_note.as_deref()
+    }
+
+    pub fn set_active_note(&mut self, id: &str) -> Result<(), ConfigError> {
+        self.active_note = Some(id.to_string());
+        self.save()
     }
 } 

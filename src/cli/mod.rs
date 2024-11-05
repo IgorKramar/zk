@@ -58,6 +58,16 @@ pub enum Commands {
         #[command(subcommand)]
         command: LinkCommands,
     },
+    /// Открыть заметку во внешнем приложении
+    Open {
+        /// ID заметки
+        #[arg(value_name = "ID")]
+        id: Option<String>,
+        
+        /// Приложение для открытия
+        #[arg(long)]
+        app: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]

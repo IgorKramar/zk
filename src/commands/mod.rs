@@ -1,3 +1,5 @@
+pub mod open;
+
 use std::env;
 use crate::cli::{Commands, ConfigCommands, TemplateCommands, TagCommands, LinkCommands};
 use crate::config::{self, Config};
@@ -326,6 +328,20 @@ pub fn handle_command(command: Commands) {
                         Err(e) => eprintln!("Ошибка при получении связей: {}", e),
                     }
                 }
+            }
+        }
+        Commands::Open { id, app } => {
+            let config = match Config::load() {
+                Ok(config) => config,
+                Err(e) => {
+                    eprintln!("Ошибка загрузки конфигурации: {}", e);
+                    return;
+                }
+            };
+
+            match open::open_note(id, app, &config) {
+                Ok(()) => (),
+                Err(e) => eprintln!("Ошибка при открытии заметки: {}", e),
             }
         }
     }
