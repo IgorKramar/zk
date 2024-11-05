@@ -20,8 +20,8 @@ cargo install --git https://github.com/IgorKramar/zk
 ### Установка из бинарных файлов
 
 1. Скачайте последнюю версию для вашей платформы:
-   - [Linux (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-linux-x86_64.tar.gz)
-   - [Windows (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-windows-x86_64.zip)
+   - [Linux (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-v0.1.0-linux-x86_64.tar.gz)
+   - [Windows (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-v0.1.0-windows-x86_64.zip)
 
 2. Распакуйте архив:
 
