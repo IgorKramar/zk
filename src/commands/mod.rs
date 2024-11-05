@@ -5,7 +5,7 @@ use crate::notes;
 use crate::templates::TemplateEngine;
 use crate::editor;
 use crate::tags;
-use crate::notes::store::NoteStore;
+use crate::notes::store::{NoteStore, SearchQuery};
 use chrono::Local;
 
 pub fn handle_command(command: Commands) {
@@ -178,7 +178,7 @@ pub fn handle_command(command: Commands) {
                 }
             }
         }
-        Commands::Search { tags } => {
+        Commands::Search { tags, title, content } => {
             let config = match Config::load() {
                 Ok(config) => config,
                 Err(e) => {
@@ -195,18 +195,32 @@ pub fn handle_command(command: Commands) {
                 }
             };
 
-            match store.search_by_tags(&tags) {
+            let query = SearchQuery { tags, title, content };
+            match store.search(&query) {
                 Ok(notes) => {
                     if notes.is_empty() {
-                        println!("Заметки с тегами {} не найдены", tags.join(", "));
+                        println!("Заметки не найдены");
                     } else {
                         println!("Найдены заметки:");
-                        for note in notes {
+                        for (note, content) in notes {
                             println!("\nID: {} ({})", note.id, note.created.format("%Y-%m-%d %H:%M"));
                             println!("Заголовок: {}", note.title);
-                            println!("Теги: {}", note.tags.join(", "));
+                            if !note.tags.is_empty() {
+                                println!("Теги: {}", note.tags.join(", "));
+                            }
                             if let Some(desc) = note.description {
                                 println!("Описание: {}", desc);
+                            }
+                            
+                            // Показываем фрагмент содержимого, если искали по нему
+                            if query.content.is_some() {
+                                let preview = content
+                                    .lines()
+                                    .filter(|line| !line.trim().is_empty())
+                                    .take(3)
+                                    .collect::<Vec<_>>()
+                                    .join("\n");
+                                println!("Фрагмент:\n{}", preview);
                             }
                         }
                     }

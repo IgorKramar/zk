@@ -38,8 +38,16 @@ pub enum Commands {
     /// Поиск заметок
     Search {
         /// Теги для поиска (все указанные теги должны быть в заметке)
-        #[arg(short, long)]
-        tags: Vec<String>,
+        #[arg(short = 'g', long = "tags")]
+        tags: Option<Vec<String>>,
+        
+        /// Поиск по заголовку
+        #[arg(short = 't', long = "title")]
+        title: Option<String>,
+        
+        /// Поиск по содержимому
+        #[arg(short = 'c', long = "content")]
+        content: Option<String>,
     },
 }
 
