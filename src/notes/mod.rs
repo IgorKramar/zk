@@ -4,6 +4,8 @@ use crate::config::Config;
 use crate::templates::TemplateEngine;
 
 pub mod metadata;
+pub mod store;
+
 use metadata::NoteMetadata;
 
 pub fn create_note(config: &Config, title: &str, template: Option<&str>) -> std::io::Result<()> {

@@ -5,6 +5,8 @@ use crate::notes;
 use crate::templates::TemplateEngine;
 use crate::editor;
 use crate::tags;
+use crate::notes::store::NoteStore;
+use chrono::Local;
 
 pub fn handle_command(command: Commands) {
     match command {
@@ -33,43 +35,52 @@ pub fn handle_command(command: Commands) {
                 }
             };
 
-            match template_cmd {
-                TemplateCommands::List => {
-                    match TemplateEngine::new(&config) {
-                        Ok(engine) => {
-                            println!("Доступные шаблоны:");
-                            for template in engine.list_templates() {
-                                println!("  - {}", template);
-                            }
-                        }
-                        Err(e) => eprintln!("Ошибка при загрузке шаблонов: {}", e),
-                    }
+            let template_engine = match TemplateEngine::new(&config) {
+                Ok(engine) => engine,
+                Err(e) => {
+                    eprintln!("Ошибка инициализации движка шаблонов: {}", e);
+                    return;
                 }
+            };
+
+            match template_cmd {
                 TemplateCommands::New { name } => {
-                    match TemplateEngine::create_template(&config, &name) {
-                        Ok(path) => {
-                            println!("Создан новый шаблон: {}", path.display());
-                            if let Err(e) = editor::edit_file(&path) {
-                                eprintln!("Ошибка при открытии редактора: {}", e);
-                            }
-                        }
+                    match template_engine.create_template(&name) {
+                        Ok(()) => println!("Шаблон '{}' создан", name),
                         Err(e) => eprintln!("Ошибка при создании шаблона: {}", e),
                     }
                 }
+                TemplateCommands::List => {
+                    let templates = template_engine.list_templates();
+                    if templates.is_empty() {
+                        println!("Шаблоны не найдены");
+                    } else {
+                        println!("Доступные шаблоны:");
+                        for template in templates {
+                            println!("  - {}", template);
+                        }
+                    }
+                }
                 TemplateCommands::Edit { name } => {
-                    match TemplateEngine::get_template_path(&config, &name) {
-                        Ok(path) => {
-                            if let Err(e) = editor::edit_file(&path) {
-                                eprintln!("Ошибка при открытии редактора: {}", e);
+                    let path = template_engine.get_template_path(&name);
+                    if !path.exists() {
+                        match template_engine.create_template(&name) {
+                            Ok(()) => println!("Создан новый шаблон '{}'", name),
+                            Err(e) => {
+                                eprintln!("Ошибка при создании шаблона: {}", e);
+                                return;
                             }
                         }
-                        Err(e) => eprintln!("Ошибка: {}", e),
+                    }
+                    
+                    if let Err(e) = editor::edit_file(&path) {
+                        eprintln!("Ошибка при открытии редактора: {}", e);
                     }
                 }
                 TemplateCommands::Show { name } => {
-                    match TemplateEngine::get_template_content(&config, &name) {
+                    match template_engine.get_template_content(&name) {
                         Ok(content) => println!("{}", content),
-                        Err(e) => eprintln!("Ошибка: {}", e),
+                        Err(e) => eprintln!("Ошибка при чтении шаблона: {}", e),
                     }
                 }
             }
@@ -83,17 +94,31 @@ pub fn handle_command(command: Commands) {
                 }
             };
 
+            let store = match NoteStore::new(config.notes_dir.clone()) {
+                Ok(store) => store,
+                Err(e) => {
+                    eprintln!("Ошибка инициализации хранилища заметок: {}", e);
+                    return;
+                }
+            };
+
             match tag_cmd {
-                TagCommands::Add { path, tags } => {
-                    match tags::add_tags(&path, &tags) {
-                        Ok(()) => println!("Теги успешно добавлены"),
-                        Err(e) => eprintln!("Ошибка при добавлении тегов: {}", e),
+                TagCommands::Add { id, tags } => {
+                    match store.get_path(&id) {
+                        Some(path) => match tags::add_tags(path, &tags) {
+                            Ok(()) => println!("Теги успешно добавлены"),
+                            Err(e) => eprintln!("Ошибка при добавлении тегов: {}", e),
+                        },
+                        None => eprintln!("Заметка с ID '{}' не найдена", id),
                     }
                 }
-                TagCommands::Remove { path, tags } => {
-                    match tags::remove_tags(&path, &tags) {
-                        Ok(()) => println!("Теги успешно удалены"),
-                        Err(e) => eprintln!("Ошибка при удалении тегов: {}", e),
+                TagCommands::Remove { id, tags } => {
+                    match store.get_path(&id) {
+                        Some(path) => match tags::remove_tags(path, &tags) {
+                            Ok(()) => println!("Теги успешно удалены"),
+                            Err(e) => eprintln!("Ошибка при удалении тегов: {}", e),
+                        },
+                        None => eprintln!("Заметка с ID '{}' не найдена", id),
                     }
                 }
                 TagCommands::List => {
@@ -111,6 +136,82 @@ pub fn handle_command(command: Commands) {
                         Err(e) => eprintln!("Ошибка при получении списка тегов: {}", e),
                     }
                 }
+            }
+        }
+        Commands::Show { id } => {
+            let config = match Config::load() {
+                Ok(config) => config,
+                Err(e) => {
+                    eprintln!("Ошибка загрузки конфигурации: {}", e);
+                    return;
+                }
+            };
+
+            let store = match NoteStore::new(config.notes_dir) {
+                Ok(store) => store,
+                Err(e) => {
+                    eprintln!("Ошибка инициализации хранилища заметок: {}", e);
+                    return;
+                }
+            };
+
+            match store.get_metadata(&id) {
+                Ok(Some(metadata)) => {
+                    println!("ID: {}", metadata.id);
+                    println!("Заголовок: {}", metadata.title);
+                    println!("Создана: {}", metadata.created.with_timezone(&Local));
+                    if !metadata.tags.is_empty() {
+                        println!("Теги: {}", metadata.tags.join(", "));
+                    }
+                    if !metadata.links.is_empty() {
+                        println!("Связи: {}", metadata.links.join(", "));
+                    }
+                    if let Some(desc) = metadata.description {
+                        println!("Описание: {}", desc);
+                    }
+                }
+                Ok(None) => {
+                    eprintln!("Заметка с ID '{}' не найдена", id);
+                }
+                Err(e) => {
+                    eprintln!("Ошибка при чтении заметки: {}", e);
+                }
+            }
+        }
+        Commands::Search { tags } => {
+            let config = match Config::load() {
+                Ok(config) => config,
+                Err(e) => {
+                    eprintln!("Ошибка загрузки конфигурации: {}", e);
+                    return;
+                }
+            };
+
+            let store = match NoteStore::new(config.notes_dir) {
+                Ok(store) => store,
+                Err(e) => {
+                    eprintln!("Ошибка инициализации хранилища заметок: {}", e);
+                    return;
+                }
+            };
+
+            match store.search_by_tags(&tags) {
+                Ok(notes) => {
+                    if notes.is_empty() {
+                        println!("Заметки с тегами {} не найдены", tags.join(", "));
+                    } else {
+                        println!("Найдены заметки:");
+                        for note in notes {
+                            println!("\nID: {} ({})", note.id, note.created.format("%Y-%m-%d %H:%M"));
+                            println!("Заголовок: {}", note.title);
+                            println!("Теги: {}", note.tags.join(", "));
+                            if let Some(desc) = note.description {
+                                println!("Описание: {}", desc);
+                            }
+                        }
+                    }
+                }
+                Err(e) => eprintln!("Ошибка при поиске заметок: {}", e),
             }
         }
     }

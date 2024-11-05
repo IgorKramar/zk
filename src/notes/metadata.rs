@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc, Local, TimeZone};
+use chrono::{DateTime, Utc, Local, NaiveDateTime, TimeZone};
 use serde::{Deserializer, Serializer};
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NoteMetadata {
+    pub id: String,
     pub title: String,
     #[serde(serialize_with = "serialize_datetime", deserialize_with = "deserialize_datetime")]
     pub created: DateTime<Utc>,
@@ -18,6 +20,7 @@ pub struct NoteMetadata {
 impl NoteMetadata {
     pub fn new(title: String) -> Self {
         NoteMetadata {
+            id: Uuid::new_v4().to_string(),
             title,
             created: Utc::now(),
             tags: Vec::new(),
@@ -50,8 +53,16 @@ where
     ];
 
     for format in formats {
-        if let Ok(dt) = Local.datetime_from_str(&time_str, format) {
+        // Пробуем сначала парсить как дату с временной зоной
+        if let Ok(dt) = DateTime::parse_from_str(&time_str, format) {
             return Ok(dt.with_timezone(&Utc));
+        }
+        
+        // Если не получилось, пробуем как наивную дату и конвертируем в локальную зону
+        if let Ok(naive_dt) = NaiveDateTime::parse_from_str(&time_str, format) {
+            if let Some(local_dt) = Local.from_local_datetime(&naive_dt).earliest() {
+                return Ok(local_dt.with_timezone(&Utc));
+            }
         }
     }
 

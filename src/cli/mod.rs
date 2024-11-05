@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "zk")]
@@ -20,6 +19,11 @@ pub enum Commands {
         #[arg(short = 'T', long)]
         template: Option<String>,
     },
+    /// Показать информацию о заметке
+    Show {
+        /// ID заметки
+        id: String,
+    },
     /// Управление тегами
     #[command(subcommand)]
     Tag(TagCommands),
@@ -31,6 +35,12 @@ pub enum Commands {
     /// Управление шаблонами
     #[command(subcommand)]
     Template(TemplateCommands),
+    /// Поиск заметок
+    Search {
+        /// Теги для поиска (все указанные теги должны быть в заметке)
+        #[arg(short, long)]
+        tags: Vec<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -60,7 +70,7 @@ pub enum TemplateCommands {
         /// Имя шаблона
         name: String,
     },
-    /// Показать содержимое шаблона
+    /// Покаать содержимое шаблона
     Show {
         /// Имя шаблона
         name: String,
@@ -71,16 +81,16 @@ pub enum TemplateCommands {
 pub enum TagCommands {
     /// Добавить теги к заметке
     Add {
-        /// Путь к заметке
-        path: PathBuf,
+        /// ID заметки
+        id: String,
         /// Теги для добавления
         #[arg(required = true)]
         tags: Vec<String>,
     },
     /// Удалить теги из заметки
     Remove {
-        /// Путь к заметке
-        path: PathBuf,
+        /// ID заметки
+        id: String,
         /// Теги для удаления
         #[arg(required = true)]
         tags: Vec<String>,

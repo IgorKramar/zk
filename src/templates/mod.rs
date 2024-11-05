@@ -1,33 +1,31 @@
 use std::fs;
 use std::path::PathBuf;
 use tera::{Tera, Context};
-use chrono::Local;
 use crate::notes::metadata::NoteMetadata;
 use crate::config::Config;
 
 pub const DEFAULT_NOTE_TEMPLATE: &str = r#"---
-title: {{ metadata.title }}
-created: {{ metadata.created | date(format="%Y-%m-%d %H:%M:%S %z") }}
+title: {{ title }}
+created: {{ created }}
+id: {{ id }}
 tags: []
 links: []
 ---
 
-# {{ metadata.title }}
+# {{ title }}
 
 "#;
 
 pub struct TemplateEngine {
     tera: Tera,
+    templates_dir: PathBuf,
 }
 
 impl TemplateEngine {
     pub fn new(config: &Config) -> Result<Self, tera::Error> {
         let mut tera = Tera::default();
-        
-        // Добавляем фильтр для форматирования даты
-        tera.register_filter("date", date_filter);
-
         let templates_dir = config.templates_dir();
+        
         if templates_dir.exists() {
             let files = fs::read_dir(&templates_dir)
                 .map_err(|e| tera::Error::msg(format!("Ошибка чтения директории шаблонов: {}", e)))?;
@@ -48,53 +46,46 @@ impl TemplateEngine {
 
         tera.add_raw_template("default.md", DEFAULT_NOTE_TEMPLATE)?;
 
-        Ok(TemplateEngine { tera })
+        Ok(TemplateEngine { 
+            tera,
+            templates_dir,
+        })
     }
 
-    pub fn create_template(config: &Config, name: &str) -> std::io::Result<PathBuf> {
-        let templates_dir = config.templates_dir();
-        fs::create_dir_all(&templates_dir)?;
-        
-        let template_path = templates_dir.join(format!("{}.md", name));
-        if template_path.exists() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::AlreadyExists,
-                "Шаблон с таким именем уже существует"
-            ));
+    pub fn create_template(&self, name: &str) -> std::io::Result<()> {
+        if !self.templates_dir.exists() {
+            fs::create_dir_all(&self.templates_dir)?;
         }
 
-        fs::write(&template_path, DEFAULT_NOTE_TEMPLATE)?;
-        Ok(template_path)
+        let template_path = self.templates_dir.join(format!("{}.md", name));
+        fs::write(template_path, DEFAULT_NOTE_TEMPLATE)?;
+        Ok(())
     }
 
-    pub fn get_template_path(config: &Config, name: &str) -> std::io::Result<PathBuf> {
-        let template_path = config.templates_dir().join(format!("{}.md", name));
-        if !template_path.exists() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "Шаблон не найден"
-            ));
+    pub fn get_template_path(&self, name: &str) -> PathBuf {
+        self.templates_dir.join(format!("{}.md", name))
+    }
+
+    pub fn get_template_content(&self, name: &str) -> std::io::Result<String> {
+        let path = self.get_template_path(name);
+        if path.exists() {
+            fs::read_to_string(path)
+        } else {
+            Ok(DEFAULT_NOTE_TEMPLATE.to_string())
         }
-
-        Ok(template_path)
-    }
-
-    pub fn get_template_content(config: &Config, name: &str) -> std::io::Result<String> {
-        let template_path = Self::get_template_path(config, name)?;
-        fs::read_to_string(template_path)
-    }
-
-    pub fn list_templates(&self) -> Vec<String> {
-        self.tera.get_template_names()
-            .map(|name| name.trim_end_matches(".md").to_string())
-            .collect()
     }
 
     pub fn render_note(&self, metadata: &NoteMetadata, template_name: &str) -> Result<String, tera::Error> {
         let mut context = Context::new();
-        context.insert("metadata", metadata);
+        context.insert("title", &metadata.title);
+        context.insert("created", &metadata.created.format("%Y-%m-%d %H:%M:%S %z").to_string());
+        context.insert("id", &metadata.id);
+        context.insert("tags", &metadata.tags);
+        context.insert("links", &metadata.links);
+        if let Some(desc) = &metadata.description {
+            context.insert("description", desc);
+        }
         
-        // Добавляем .md к имени шаблона, если его нет
         let template_name = if template_name.ends_with(".md") {
             template_name.to_string()
         } else {
@@ -103,20 +94,10 @@ impl TemplateEngine {
 
         self.tera.render(&template_name, &context)
     }
-}
 
-fn date_filter(value: &tera::Value, args: &std::collections::HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
-    let datetime = value.as_i64().ok_or_else(|| {
-        tera::Error::msg("Значение даты должно быть целым числом (timestamp)")
-    })?;
-
-    let format = args.get("format")
-        .and_then(|v| v.as_str())
-        .unwrap_or("%Y-%m-%d %H:%M:%S %z");
-
-    let dt = chrono::DateTime::from_timestamp(datetime, 0)
-        .ok_or_else(|| tera::Error::msg("Некорректное значение timestamp"))?
-        .with_timezone(&Local);
-
-    Ok(tera::Value::String(dt.format(format).to_string()))
+    pub fn list_templates(&self) -> Vec<String> {
+        self.tera.get_template_names()
+            .map(|name| name.trim_end_matches(".md").to_string())
+            .collect()
+    }
 } 

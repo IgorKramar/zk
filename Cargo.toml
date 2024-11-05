@@ -13,3 +13,4 @@ toml = "0.8"
 serde_yaml = "0.9"
 tera = "1.19"
 walkdir = "2.4"
+uuid = { version = "1.7", features = ["v4"] }
