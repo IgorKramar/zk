@@ -20,3 +20,5 @@ walkdir = "2.4"
 uuid = { version = "1.7", features = ["v4"] }
 regex = "1.10.3"
 colored = "2.1.0"
+ratatui = "0.26.1"
+crossterm = "0.27.0"

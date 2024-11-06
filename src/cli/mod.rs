@@ -68,6 +68,8 @@ pub enum Commands {
         #[arg(long)]
         app: Option<String>,
     },
+    /// Запустить интерактивный режим
+    Tui,
 }
 
 #[derive(Subcommand)]

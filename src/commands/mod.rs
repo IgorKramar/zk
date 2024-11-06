@@ -1,4 +1,5 @@
 pub mod open;
+use crate::tui::App;
 
 use std::env;
 use crate::cli::{Commands, ConfigCommands, TemplateCommands, TagCommands, LinkCommands};
@@ -288,7 +289,7 @@ pub fn handle_command(command: Commands) {
                 LinkCommands::Add { from, to, description } => {
                     match store.add_link(&from, &to, description) {
                         Ok(()) => println!("Связь добавлена"),
-                        Err(e) => eprintln!("Ошибка при добавлении связи: {}", e),
+                        Err(e) => eprintln!("Ошибка при добавлении с��язи: {}", e),
                     }
                 }
                 LinkCommands::Remove { from, to } => {
@@ -342,6 +343,24 @@ pub fn handle_command(command: Commands) {
             match open::open_note(id, app, &config) {
                 Ok(()) => (),
                 Err(e) => eprintln!("Ошибка при открытии заметки: {}", e),
+            }
+        }
+        Commands::Tui => {
+            let config = match Config::load() {
+                Ok(config) => config,
+                Err(e) => {
+                    eprintln!("Ошибка загрузки конфигурации: {}", e);
+                    return;
+                }
+            };
+
+            match App::new(&config) {
+                Ok(mut app) => {
+                    if let Err(e) = app.run() {
+                        eprintln!("Ошибка в TUI: {}", e);
+                    }
+                }
+                Err(e) => eprintln!("Ошибка при инициализации TUI: {}", e),
             }
         }
     }

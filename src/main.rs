@@ -5,6 +5,7 @@ mod commands;
 mod templates;
 mod editor;
 mod tags;
+mod tui;
 
 use cli::Cli;
 use clap::Parser;

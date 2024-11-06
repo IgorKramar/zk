@@ -5,6 +5,7 @@ use walkdir::WalkDir;
 use regex::Regex;
 use crate::notes::metadata::{NoteMetadata, Link};
 use serde_yaml;
+use std::io;
 
 #[derive(Debug)]
 pub struct SearchQuery {
@@ -298,6 +299,20 @@ impl NoteStore {
         }
 
         Ok(links)
+    }
+
+    pub fn list(&self) -> io::Result<Vec<(String, NoteMetadata)>> {
+        let mut notes = Vec::new();
+        
+        for (id, path) in &self.notes {
+            if let Ok(content) = std::fs::read_to_string(path) {
+                if let Ok((metadata, _)) = parse_frontmatter(&content) {
+                    notes.push((id.clone(), metadata));
+                }
+            }
+        }
+        
+        Ok(notes)
     }
 }
 
