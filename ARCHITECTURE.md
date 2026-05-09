@@ -10,7 +10,9 @@
 
 ## 1. System summary
 
-`zk` — это CLI/TUI инструмент для ведения базы знаний в формате Zettelkasten, написанный на Rust. Первичный пользователь — terminal-native инженер/исследователь, живущий в vim+tmux+git, который хочет вести граф знаний как plain-text файлы внутри своей цепочки инструментов, а не в тяжёлом GUI типа Obsidian. Система research-grounded: она *принуждает* к Zettelkasten-паттернам (atomic notes, link-before-save, фиксированная ID-схема), а не даёт ещё один настраиваемый markdown-редактор. Заметки живут как plain markdown на диске; продукт композируется с `$EDITOR`, ripgrep, fzf и git, а не переизобретает их.
+`zetto` — это CLI/TUI инструмент для ведения базы знаний в формате Zettelkasten, написанный на Rust. Первичный пользователь — terminal-native инженер/исследователь, живущий в vim+tmux+git, который хочет вести граф знаний как plain-text файлы внутри своей цепочки инструментов, а не в тяжёлом GUI типа Obsidian. Система research-grounded: она *принуждает* к Zettelkasten-паттернам (atomic notes, link-before-save, фиксированная ID-схема), а не даёт ещё один настраиваемый markdown-редактор. Заметки живут как plain markdown на диске; продукт композируется с `$EDITOR`, ripgrep, fzf и git, а не переизобретает их.
+
+Проект переименован из `zk` в `zetto` в [ADR-0001](./docs/architecture/decisions/0001-project-name-and-ecosystem-positioning.md) (2026-05-09).
 
 См. [`STRATEGY.md`](./STRATEGY.md) для полного контекста.
 
@@ -22,7 +24,7 @@
 
 | Attribute | Target | Notes |
 |---|---|---|
-| Capture latency (p50) | <5s end-to-end (`zk new` → сохранённая связанная заметка) | Метрика из STRATEGY. Бюджет распределён по этапам — см. подтаблицу ниже. |
+| Capture latency (p50) | <5s end-to-end (`zetto new` → сохранённая связанная заметка) | Метрика из STRATEGY. Бюджет распределён по этапам — см. подтаблицу ниже. |
 | Cold start | _TBD_ | Должен быть на порядок ниже Electron-альтернатив. Numerify когда появится baseline. |
 | Resource footprint | _TBD_ | Single-binary; RAM/CPU при idle TUI. |
 | Throughput на индексации | _TBD_ | Сколько заметок в секунду парсится при cold rebuild графа. Важно для Note graph engine. |
@@ -56,14 +58,14 @@
 graph TB
     User["Terminal-native пользователь"]
 
-    subgraph zk["zk (single Rust binary)"]
+    subgraph zetto["zetto (single Rust binary)"]
         CLI["<b>CLI / argparse</b><br/>[Rust + clap]<br/>Subcommand routing"]
         TUI["<b>TUI</b><br/>[Rust + ratatui]<br/>Capture flow, navigation,<br/>fuzzy linking"]
         Commands["<b>Commands</b><br/>new/open/search/tag/...<br/>Per-subcommand logic"]
         Notes["<b>Notes module</b><br/>Store, metadata, IDs,<br/>link parsing"]
         Tags["<b>Tags module</b><br/>Tag index"]
         Templates["<b>Templates</b><br/>Note skeletons"]
-        Config["<b>Config</b><br/>~/.config/zk, .zkrc"]
+        Config["<b>Config</b><br/>~/.config/zetto, .zettorc"]
         Editor["<b>Editor delegate</b><br/>Spawn $EDITOR"]
     end
 
@@ -123,8 +125,8 @@ ADR файлы живут в [`docs/architecture/decisions/`](./docs/architectur
 - **Q1. Схема ID заметок.** STRATEGY требует «фиксированную ID-схему», но не уточняет какую. Варианты: hierarchical Luhmann-style (`1a2b3c`), timestamp (`202605091230`), ULID, short slug. Влияет на: имя файла, формат ссылок, сортировку, читаемость в `ls`/git diff.
 - **Q2. Синтаксис ссылок.** `[[wikilinks]]` (Obsidian-совместимость) vs canonical markdown `[text](path.md)` vs оба. Определяет сложность парсера, совместимость с vim-плагинами/pandoc/mdbook и обязательность собственного link-resolver.
 - **Q3. Хранилище графа/индекса.** In-memory rebuild при каждом запуске (zero state, but cold-start cost) vs persistent index (sqlite/sled/JSON sidecar — быстро, но invalidation и sync). Критично для Capture latency и Note graph engine track.
-- **Q4. Граница TUI vs CLI-pipe.** Какие операции — только TUI (живая навигация, fuzzy-linking графа) vs композируемые pipe-friendly CLI (`zk list`, `zk new`, `zk lint`). Это контракт Toolchain interop track и определяет, можно ли использовать `zk` из shell-скриптов и редакторных плагинов.
-- **Q5. Степень принуждения constraints.** `zk new` *блокирует* сохранение без исходящей ссылки vs предупреждает vs только flag в `zk lint`. Прямой trade-off между Capture latency (быстрее = меньше принуждения) и Orphan-note ratio (строже = ниже orphan rate). Определяет, воспринимается ли Methodology enforcement как помощь или как враждебность.
+- **Q4. Граница TUI vs CLI-pipe.** Какие операции — только TUI (живая навигация, fuzzy-linking графа) vs композируемые pipe-friendly CLI (`zetto list`, `zetto new`, `zetto lint`). Это контракт Toolchain interop track и определяет, можно ли использовать `zetto` из shell-скриптов и редакторных плагинов.
+- **Q5. Степень принуждения constraints.** `zetto new` *блокирует* сохранение без исходящей ссылки vs предупреждает vs только flag в `zetto lint`. Прямой trade-off между Capture latency (быстрее = меньше принуждения) и Orphan-note ratio (строже = ниже orphan rate). Определяет, воспринимается ли Methodology enforcement как помощь или как враждебность.
 
 ---
 
@@ -137,7 +139,7 @@ ADR файлы живут в [`docs/architecture/decisions/`](./docs/architectur
 - **Теги не заменяют ссылки.** Теги — facet, ссылки — связи. Если фича позволяет tagging вместо linking — это анти-паттерн.
 - **Никакого Electron / web-UI.** Уничтожает основной тезис продукта.
 - **Никакого облачного sync как зависимости.** Sync = пользовательский git (или другой механизм поверх файлов). Любое cloud-coupling — анти-паттерн.
-- **Не переизобретать ripgrep/fzf/git.** Если задача решается композицией существующих CLI — `zk` не реализует её сам (см. Track «Toolchain interop»).
+- **Не переизобретать ripgrep/fzf/git.** Если задача решается композицией существующих CLI — `zetto` не реализует её сам (см. Track «Toolchain interop»).
 - **Никаких mouse-only путей в TUI.** Каждое действие должно иметь keybinding; mouse — опционально.
 
 <!-- Дополнено `/archforge:observe` 2026-05-09 (находка O-12 — формализация trех subject-replacement идей, отвергнутых ideation): -->

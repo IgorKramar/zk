@@ -1,8 +1,10 @@
 **English** · [Русский](./README.ru.md)
 
-# zk
+# zetto
 
 A terminal-native CLI/TUI for Zettelkasten-style knowledge management, written in Rust.
+
+> Previously known as `zk`. Renamed in [ADR-0001](./docs/architecture/decisions/0001-project-name-and-ecosystem-positioning.md) (2026-05-09) to avoid collision with [zk-org/zk](https://github.com/zk-org/zk).
 
 > ### ⚠️ Status: pre-alpha, architectural design phase
 >
@@ -10,12 +12,12 @@ A terminal-native CLI/TUI for Zettelkasten-style knowledge management, written i
 
 ## A note on the name
 
-This project shares the name `zk` with [zk-org/zk](https://github.com/zk-org/zk), an established Go-based Zettelkasten CLI (~2.6k stars, active May 2026). They are different projects with different goals:
+This project was renamed from `zk` to `zetto` in [ADR-0001](./docs/architecture/decisions/0001-project-name-and-ecosystem-positioning.md) to avoid confusion with [zk-org/zk](https://github.com/zk-org/zk), an established Go-based Zettelkasten CLI in the same niche (~2.6k stars, active May 2026). The two projects have different goals:
 
 - **zk-org/zk** is methodology-agnostic: orphan notes, deep folder hierarchies, and free-form tags are all permitted.
-- **zk (this project)** enforces research-grounded Zettelkasten constraints (atomic notes, link-before-save, fixed ID schema, no folders-as-taxonomy) at write time, not after the fact.
+- **zetto (this project)** enforces research-grounded Zettelkasten constraints (atomic notes, link-before-save, fixed ID schema, no folders-as-taxonomy) at write time, not after the fact.
 
-The name will be revisited in an upcoming ADR (see decision **D3** in [`decision-map.md`](./docs/architecture/decision-map.md)). Until that ADR lands, `zk` is the working name.
+The name `zetto` derives from German *Zettel* (note card), the root of the Zettelkasten methodology itself. If you arrive here from a search or a link mentioning `zk` from before May 2026 — this is the same repository (auto-redirected from `IgorKramar/zk`).
 
 ## What this is
 
@@ -27,7 +29,7 @@ Read [`STRATEGY.md`](./STRATEGY.md) for the full framing.
 
 If you want to understand where this is heading, read in this order:
 
-1. [`STRATEGY.md`](./STRATEGY.md) — what zk is, who it serves, key metrics, tracks of work.
+1. [`STRATEGY.md`](./STRATEGY.md) — what zetto is, who it serves, key metrics, tracks of work.
 2. [`ARCHITECTURE.md`](./ARCHITECTURE.md) — system summary, quality attributes (with latency budget breakdown), constraints, anti-patterns, open questions.
 3. [`docs/architecture/decision-map.md`](./docs/architecture/decision-map.md) — open architectural decisions in four groups (on-disk contract, engine internals, surface/UX, interop & ecosystem) with dependencies and a proposed order.
 4. [`docs/ideation/`](./docs/ideation/) — outputs of brainstorming and idea-filtering passes that feed into decisions.

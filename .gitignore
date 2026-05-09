@@ -1,6 +1,6 @@
 /target
 
-.zkrc
-.config/zk
+.zettorc
+.config/zetto
 
 releases/*

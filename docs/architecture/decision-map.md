@@ -9,7 +9,7 @@
 
 ## Group A — On-disk contract (principal stakes)
 
-Это контракт между `zk` и пользователем («notes-as-code»). Всё, что внутри движка, должно ему подчиняться. Эти решения почти не обратимы — они мигрируют через переписывание всех существующих заметок.
+Это контракт между `zetto` и пользователем («notes-as-code»). Всё, что внутри движка, должно ему подчиняться. Эти решения почти не обратимы — они мигрируют через переписывание всех существующих заметок.
 
 **A1. Note ID scheme + filename convention** (= Q1 в ARCHITECTURE.md)
 - *Forces*: human-readable vs collision-safe; sortable в `ls/git diff`; стабильность при переименовании; совместимость с file-system-as-graph.
@@ -73,19 +73,19 @@
 Самая обратимая категория — можно перекрутить TUI/CLI без миграции данных. Зависят от A слабо (через формат отображения) и от B минимально.
 
 **C1. TUI ↔ CLI-pipe boundary** (= Q4)
-- *Forces*: какие операции pipe-friendly (`zk new`, `zk list`, `zk lint`) vs только TUI (живая навигация графа, fuzzy-link picker). Контракт Toolchain interop track. Решение «всё через TUI» убивает scriptability; «всё через CLI» убивает UX.
+- *Forces*: какие операции pipe-friendly (`zetto new`, `zetto list`, `zetto lint`) vs только TUI (живая навигация графа, fuzzy-link picker). Контракт Toolchain interop track. Решение «всё через TUI» убивает scriptability; «всё через CLI» убивает UX.
 - *Status*: open
 - *Blocks*: C2a, C2b, C3, C4, C5, D1
 - *Blocked by*: — (можно решать почти параллельно с A)
 
 **C2a. Methodology rule engine architecture** *(расщеплено из C2 `/archforge:observe` 2026-05-09; находка O-5)*
-- *Forces*: API правил (имена `zk/no-orphan`, `zk/atomic-size`, etc.; категории; metadata); модель уровней (off / warn / error per-rule); inline-disable-механизм (frontmatter-флаг или HTML-комментарий); поддержка `--fix`; модель пресетов (`recommended-luhmann`, ship-time комплекты); точки запуска (pre-commit, runtime check before save, `zk lint` batch). Это рамка для всей Methodology enforcement track.
+- *Forces*: API правил (имена `zetto/no-orphan`, `zetto/atomic-size`, etc.; категории; metadata); модель уровней (off / warn / error per-rule); inline-disable-механизм (frontmatter-флаг или HTML-комментарий); поддержка `--fix`; модель пресетов (`recommended-luhmann`, ship-time комплекты); точки запуска (pre-commit, runtime check before save, `zetto lint` batch). Это рамка для всей Methodology enforcement track.
 - *Status*: open
 - *Blocks*: C2b, C4
 - *Blocked by*: C1
 
 **C2b. Default strictness for `link-before-save` rule** *(прежняя C2, теперь как одно правило внутри C2a)*
-- *Forces*: уровень правила `zk/link-before-save` в дефолтном пресете — `error` (блокирует save), `warn` (предупреждает, но позволяет), или `off` (только в `zk lint` batch). Прямой trade-off Capture latency ↔ Orphan-note ratio.
+- *Forces*: уровень правила `zetto/link-before-save` в дефолтном пресете — `error` (блокирует save), `warn` (предупреждает, но позволяет), или `off` (только в `zetto lint` batch). Прямой trade-off Capture latency ↔ Orphan-note ratio.
 - *Status*: open
 - *Blocks*: C4
 - *Blocked by*: C1, C2a (уровень имеет смысл только в рамках общей модели уровней)
@@ -98,13 +98,13 @@
 - *Reversibility*: средняя — миграция между TUI-библиотеками ≈ переписывание UI-слоя.
 
 **C4. Capture flow architecture** *(reframed `/archforge:observe` 2026-05-09; находка O-7 — расширено с UX-дизайна до архитектуры потоков)*
-- *Forces*: верхнеуровневый выбор — (a) **single mode**: один поток, в нём же применяются ограничения; (b) **service / prep split** (mise-en-place): `zk capture` — service-mode <5 с, без валидации, append в inbox-buffer; `zk prep` — отдельный методичный ритуал, где применяются `zk/link-before-save` и пр. Трактует напряжение метрик capture-latency ↔ orphan-ratio как архитектурное, а не правило-уровневое. Подвопросы (single-keystroke shape, fuzzy-linking UX, бюджет latency) — внутри выбранного верхнеуровневого варианта.
+- *Forces*: верхнеуровневый выбор — (a) **single mode**: один поток, в нём же применяются ограничения; (b) **service / prep split** (mise-en-place): `zetto capture` — service-mode <5 с, без валидации, append в inbox-buffer; `zetto prep` — отдельный методичный ритуал, где применяются `zetto/link-before-save` и пр. Трактует напряжение метрик capture-latency ↔ orphan-ratio как архитектурное, а не правило-уровневое. Подвопросы (single-keystroke shape, fuzzy-linking UX, бюджет latency) — внутри выбранного верхнеуровневого варианта.
 - *Status*: open
 - *Blocks*: —
 - *Blocked by*: A1, A2, B1, C1, C2a, C2b, C3 (это конечная UX-сборка верхнего уровня)
 
 **C5. Editor-integration strategy** *(добавлено `/archforge:observe` 2026-05-09; находка O-3)*
-- *Forces*: STRATEGY-первичный пользователь — vim+tmux+git, но *как именно* zk встречает их в редакторе — открытый вопрос. Варианты: (a) **CLI-only** + shell-completion, пользователь сам пишет vim-команды/маппинги; (b) **vim-плагин-обёртка** поверх CLI; (c) **LSP-сервер** (универсально для vim/Helix/Zed/VS Code, link-validation/orphan-warnings/hover-backlinks как diagnostics); (d) **vim-плагин с встроенным движком** (Rust-core через nvim-oxi/mlua). Прецеденты: rust-analyzer / pyright / org-roam / telekasten.nvim / zk.nvim.
+- *Forces*: STRATEGY-первичный пользователь — vim+tmux+git, но *как именно* zetto встречает их в редакторе — открытый вопрос. Варианты: (a) **CLI-only** + shell-completion, пользователь сам пишет vim-команды/маппинги; (b) **vim-плагин-обёртка** поверх CLI; (c) **LSP-сервер** (универсально для vim/Helix/Zed/VS Code, link-validation/orphan-warnings/hover-backlinks как diagnostics); (d) **vim-плагин с встроенным движком** (Rust-core через nvim-oxi/mlua). Прецеденты: rust-analyzer / pyright / org-roam / telekasten.nvim / zk.nvim.
 - *Status*: open
 - *Blocks*: —
 - *Blocked by*: C1 (граница TUI/CLI определяет surface, на которую плагины опираются); рекомендуется `/archforge:research` перед циклом
@@ -121,7 +121,7 @@
 - *Blocked by*: B1, A1
 
 **D2. Git coupling model**
-- *Forces*: `zk` производит коммиты сам vs только пишет файлы и оставляет git пользователю vs опциональные хуки (`zk commit`). Старая история проекта (см. удалённые `src/`) к git напрямую не привязывалась. STRATEGY говорит «files в git-репозитории как обычные файлы» — это аргумент за hands-off.
+- *Forces*: `zetto` производит коммиты сам vs только пишет файлы и оставляет git пользователю vs опциональные хуки (`zetto commit`). Старая история проекта (см. удалённые `src/`) к git напрямую не привязывалась. STRATEGY говорит «files в git-репозитории как обычные файлы» — это аргумент за hands-off.
 - *Status*: open (имплицитно)
 - *Blocks*: —
 - *Blocked by*: A1, A4
@@ -133,7 +133,7 @@
 - *Blocked by*: —
 
 **D4. Obsidian-vault compatibility posture** *(добавлено `/archforge:observe` 2026-05-09; находка O-6)*
-- *Forces*: четыре варианта по возрастанию совместимости — (a) **полностью свой формат**, никакого диалога с Obsidian; (b) **read-only совместимость** (zk умеет читать существующий Obsidian-vault, но пишет в свой формат — путь миграции в одну сторону); (c) **read-write совместимость** (zk и Obsidian могут параллельно работать с одним vault, без конфликтов); (d) **strict checker поверх vault** (zk не редактирует, только проверяет/линтит существующий Obsidian-vault — позиционирование как методологический add-on). Прецеденты: Obsidian имеет ~1M пользователей, его формат de-facto стандарт plain-markdown PKM; native wikilinks-extension у pulldown-cmark облегчает совместимость. Влияет на выбор A2 (link syntax), на распространение (плагин-store как канал) и на анти-паттерн «no Electron» (он не запрещает совместимости *по формату* с Electron-инструментом).
+- *Forces*: четыре варианта по возрастанию совместимости — (a) **полностью свой формат**, никакого диалога с Obsidian; (b) **read-only совместимость** (zetto умеет читать существующий Obsidian-vault, но пишет в свой формат — путь миграции в одну сторону); (c) **read-write совместимость** (zetto и Obsidian могут параллельно работать с одним vault, без конфликтов); (d) **strict checker поверх vault** (zetto не редактирует, только проверяет/линтит существующий Obsidian-vault — позиционирование как методологический add-on). Прецеденты: Obsidian имеет ~1M пользователей, его формат de-facto стандарт plain-markdown PKM; native wikilinks-extension у pulldown-cmark облегчает совместимость. Влияет на выбор A2 (link syntax), на распространение (плагин-store как канал) и на анти-паттерн «no Electron» (он не запрещает совместимости *по формату* с Electron-инструментом).
 - *Status*: open
 - *Blocks*: —
 - *Blocked by*: A1, A2, A3, A4, A5
