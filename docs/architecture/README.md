@@ -22,7 +22,7 @@ section 5.
 
 | # | Date | Status | Decision |
 |---|---|---|---|
-| _—_ | _—_ | _—_ | _ADR-ов пока нет_ |
+| [0001](./decisions/0001-project-name-and-ecosystem-positioning.md) | 2026-05-09 | Accepted | Rename project from `zk` to `zetto` |
 
 ## How to use
 

@@ -126,6 +126,12 @@
 - *Blocks*: —
 - *Blocked by*: A1, A4
 
+**D3. Project name & ecosystem positioning** *(добавлено и закрыто `/archforge:adr` 2026-05-09)*
+- *Forces*: коллизия имени `zk` с действующим Go-проектом [zk-org/zk](https://github.com/zk-org/zk) (2,6k★, активный май 2026); SEO/install-collision; стратегия резерва имени по реестрам распространения (crates.io, Homebrew, AUR).
+- *Status*: **decided** — см. [ADR-0001](decisions/0001-project-name-and-ecosystem-positioning.md). Проект переименовывается в `zetto`.
+- *Blocks*: D5 (теперь разблокирован)
+- *Blocked by*: —
+
 **D4. Obsidian-vault compatibility posture** *(добавлено `/archforge:observe` 2026-05-09; находка O-6)*
 - *Forces*: четыре варианта по возрастанию совместимости — (a) **полностью свой формат**, никакого диалога с Obsidian; (b) **read-only совместимость** (zk умеет читать существующий Obsidian-vault, но пишет в свой формат — путь миграции в одну сторону); (c) **read-write совместимость** (zk и Obsidian могут параллельно работать с одним vault, без конфликтов); (d) **strict checker поверх vault** (zk не редактирует, только проверяет/линтит существующий Obsidian-vault — позиционирование как методологический add-on). Прецеденты: Obsidian имеет ~1M пользователей, его формат de-facto стандарт plain-markdown PKM; native wikilinks-extension у pulldown-cmark облегчает совместимость. Влияет на выбор A2 (link syntax), на распространение (плагин-store как канал) и на анти-паттерн «no Electron» (он не запрещает совместимости *по формату* с Electron-инструментом).
 - *Status*: open
@@ -136,7 +142,7 @@
 - *Forces*: каналы (cargo install / pre-built GitHub releases / Homebrew tap / scoop / пакеты дистрибутивов); release cadence; signing (особенно macOS); cross-compilation matrix; стабилизация CLI-surface как публичного контракта.
 - *Status*: deferred (см. ниже) — wait for: подход к v0.1 release plan
 - *Blocks*: —
-- *Blocked by*: D3 (имя проекта — кандидат на отдельный ADR через `/archforge:adr`); все каналы требуют резерва имени до публикации
+- *Blocked by*: ADR-0001 разблокирован (имя `zetto` зафиксировано); требуется резерв `zetto` на crates.io как squat-defense до публикации
 
 ---
 
@@ -145,9 +151,10 @@
 Топологическая сортировка с учётом hard-dependencies. Сортировка внутри уровня — по reversibility (необратимое первым), blast radius (большее первым), information value (отвечает на больше других вопросов первым).
 
 **Уровень 0 (next up — unblocked)**
-- **D3 (имя проекта).** Решается отдельно через `/archforge:adr "Project name and ecosystem positioning"` — ideation от 2026-05-09 даёт сильный сигнал, цикл здесь избыточен. Не блокирует архитектурную работу, но блокирует D5 (распространение).
 - **A1. Note ID scheme** — стартовая точка. Необратима, blocks больше всего, открывает A2/A3/A4/A5.
 - **C1. TUI ↔ CLI-pipe boundary** — параллельно к A1: не блокируется ничем из Group A. Можно вести параллельный cycle.
+
+*(D3 — имя проекта — закрыт [ADR-0001](decisions/0001-project-name-and-ecosystem-positioning.md): rename `zk` → `zetto`.)*
 
 **Уровень 1 (после A1 решён)**
 - **A2. Link representation** — bundled с A1, либо сразу следом.
@@ -197,4 +204,4 @@
 - A1 и A2 имеют **mutual constraint**: их трудно решать порознь. Опции: (а) единый bundled ADR на «on-disk note format», (б) два очень близких последовательных ADR с явной взаимной ссылкой. Выбор формы — на уровне `/archforge:design` для A1.
 - Существует git-история до текущего пустого state (см. `git log` — `74543aa add tags search`, `e416aa4 add tags support`, `899bafd feat: add support for opening notes in various editors`). Эти коммиты содержат имплицитные решения по A1–A4 и D2, которые были сделаны *до* появления STRATEGY.md. **Перед запуском A1 имеет смысл прочитать удалённые `src/notes/store.rs`, `src/notes/metadata.rs` из последнего реального коммита** — там лежит бесплатный prior-art из собственного проекта.
 - Старые ветки кода (TUI, search, tags) — это спайки, а не контракты. Не стоит таскать их решения в новые ADR без re-evaluation на фоне нового STRATEGY (research-grounded constraints).
-- **Кросс-рамочные сходимости из ideation 2026-05-09** (X1–X6 в ideation-документе) полезны как сигналы того, какие решения стоит рассматривать bundled: X4 (event-sourced индекс) объединяет B1+B3+D1; X1 (engine kernel + thin UI clients) объединяет C1+C5; X3 (имя проекта) выделено в D3 для отдельного ADR.
+- **Кросс-рамочные сходимости из ideation 2026-05-09** (X1–X6 в ideation-документе) полезны как сигналы того, какие решения стоит рассматривать bundled: X4 (event-sourced индекс) объединяет B1+B3+D1; X1 (engine kernel + thin UI clients) объединяет C1+C5; X3 (имя проекта) разрешено в [ADR-0001](decisions/0001-project-name-and-ecosystem-positioning.md).
