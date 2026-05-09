@@ -1,237 +1,69 @@
-# ZK - Менеджер базы знаний
+**English** · [Русский](./README.ru.md)
 
-ZK (Zettelkasten) - это инструмент командной строки для ведения базы знаний в формате Zettelkasten.
+# zk
 
-## Возможности
+A terminal-native CLI/TUI for Zettelkasten-style knowledge management, written in Rust.
 
-- ✨ Создание заметок с автоматической генерацией ID
-- 🏷️ Поддержка тегов
-- 🔍 Полнотекстовый поиск с регулярными выражениями
-- 🔗 Управление связями между заметками
-- 📝 Поддержка шаблонов заметок
-- 📱 Интерактивный режим просмотра и навигации (TUI)
-- 🔧 Интеграция с внешними редакторами
-- ⚙️ Гибкая конфигурация
+> ### ⚠️ Status: pre-alpha, architectural design phase
+>
+> The working tree is intentionally empty. The project is in a structured architectural redesign before code is written: strategy, architecture, decision map, and adversarial ideation are being settled first. See [`STRATEGY.md`](./STRATEGY.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md), and [`docs/architecture/decision-map.md`](./docs/architecture/decision-map.md) for the current state.
 
-## Установка
+## A note on the name
 
-### Установка из репозитория
-```bash
-cargo install --git https://github.com/IgorKramar/zk
-```
-### Установка из бинарных файлов
+This project shares the name `zk` with [zk-org/zk](https://github.com/zk-org/zk), an established Go-based Zettelkasten CLI (~2.6k stars, active May 2026). They are different projects with different goals:
 
-1. Скачайте последнюю версию для вашей платформы:
-   - [Linux (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-v0.1.0-linux-x86_64.tar.gz)
-   - [Windows (x86_64)](https://github.com/IgorKramar/zk/releases/latest/download/zk-v0.1.0-windows-x86_64.zip)
+- **zk-org/zk** is methodology-agnostic: orphan notes, deep folder hierarchies, and free-form tags are all permitted.
+- **zk (this project)** enforces research-grounded Zettelkasten constraints (atomic notes, link-before-save, fixed ID schema, no folders-as-taxonomy) at write time, not after the fact.
 
-2. Распакуйте архив:
+The name will be revisited in an upcoming ADR (see decision **D3** in [`decision-map.md`](./docs/architecture/decision-map.md)). Until that ADR lands, `zk` is the working name.
 
-#### Linux/macOS
-```bash
-tar xzf zk-*-x86_64.tar.gz
-sudo mv zk /usr/local/bin/
-```
-#### Windows
-Распакуйте zip-файл и добавьте путь к zk.exe в PATH
+## What this is
 
-## Использование
+A CLI/TUI for terminal-native engineers who already live in vim+tmux+git and want their knowledge graph as plain markdown alongside their code — instead of in a separate GUI like Obsidian. Behavior is dictated by proven Zettelkasten patterns (Luhmann, Ahrens): atomic notes, link-before-save, fixed ID schema, no folders-as-taxonomy, no tags-as-link-replacement. The tool composes with `$EDITOR`, ripgrep, fzf, and git rather than reimplementing them.
 
-### Инициализация базы знаний
+Read [`STRATEGY.md`](./STRATEGY.md) for the full framing.
 
-```bash
-# Создать новую базу знаний в текущей директории
-zk init
-```
+## Reading order
 
-### Работа с заметками
+If you want to understand where this is heading, read in this order:
 
-```bash
-# Создать новую заметку
-zk new "Название заметки"
+1. [`STRATEGY.md`](./STRATEGY.md) — what zk is, who it serves, key metrics, tracks of work.
+2. [`ARCHITECTURE.md`](./ARCHITECTURE.md) — system summary, quality attributes (with latency budget breakdown), constraints, anti-patterns, open questions.
+3. [`docs/architecture/decision-map.md`](./docs/architecture/decision-map.md) — open architectural decisions in four groups (on-disk contract, engine internals, surface/UX, interop & ecosystem) with dependencies and a proposed order.
+4. [`docs/ideation/`](./docs/ideation/) — outputs of brainstorming and idea-filtering passes that feed into decisions.
+5. [`docs/architecture/decisions/`](./docs/architecture/decisions/) — accepted ADRs. None yet — the first will resolve project naming; subsequent ones close the on-disk contract group.
+6. [`docs/architecture/research/`](./docs/architecture/research/) — discovery, design, and observation reports that produced the decisions.
 
-# Создать заметку по шаблону
-zk new "Название заметки" -t template_name
+## Why the working tree is empty
 
-# Показать заметку
-zk show abc123
+A previous implementation existed in this repository — `Cargo.toml`, `src/{cli,commands,notes,tags,templates,tui,editor,config}`, with UUID IDs, YAML frontmatter, an in-memory HashMap graph, search by tags / title / content / regex / glob, and editor delegation to vim/nvim/code/emacs. The last real commit (`293a1e4 feat: add tui style`, November 2024) is still in the git history.
 
-# Поиск заметок
-zk search -t "заголовок" -c "содержимое" --tags tag1,tag2
-zk search -t "рег.*эксп" -r  # поиск по регулярному выражению
+That implementation was a spike — useful for learning, but the choices it embedded were made before `STRATEGY.md` was written. After articulating the strategy (research-grounded constraints, lintable methodology, terminal-native distribution model), the prior implementation no longer matches the intended product. It is intentionally not in the working tree; the redesign starts from architecture, not from code refactoring.
 
-# Открыть заметку во внешнем редакторе
-zk open abc123  # использует редактор из EDITOR
-zk open abc123 --app vim  # открыть в конкретном редакторе
+The git history remains a useful prior-art source for discovery work. To inspect a prior file:
 
-# Запустить интерактивный режим
-zk tui  # навигация по заметкам в терминале
+```sh
+git show HEAD:src/notes/store.rs | less
+git show HEAD:src/cli/mod.rs | less
 ```
 
-### Управление тегами
+Commits before `293a1e4` are part of the historical record; nothing prior to the architectural reset is being treated as a contract.
 
-```bash
-# Добавить теги к заметке
-zk tag add abc123 tag1 tag2
+## Project scaffolding
 
-# Удалить теги из заметки
-zk tag remove abc123 tag1
+This repository uses two complementary Claude Code plugins to drive the architectural and feature work:
 
-# Показать все теги
-zk tag list
-```
+- **`archforge`** — architecture cycle (Discover → Research → Design → Decide → Document → Review). All architectural decisions live in `docs/architecture/`.
+- **`compound-engineering`** — feature workflow (Brainstorm → Plan → Work → Review → Compound). Feature-level artifacts live in `docs/{ideation,brainstorms,plans,solutions}/`.
 
-### Управление связями
+The interleaving rules (when each cycle hands off to the other) live in [`AGENTS.md`](./AGENTS.md).
 
-```bash
-# Добавить связь между заметками
-zk link add abc123 def456 -d "Описание связи"
+## Contributing
 
-# Показать связи заметки
-zk link show abc123
-zk link show abc123 --backlinks  # включая обратные связи
+Not yet open for outside contributions — the architectural work is structured and one-author at this stage. Once the first ADRs are accepted and the on-disk format spec (`format-v1`) is published, this section will be expanded with a setup guide and a contribution flow.
 
-# Удалить связь
-zk link remove abc123 def456
-```
+If the project is interesting in its current state, the most useful feedback is on the open questions in `decision-map.md`.
 
-### Работа с шаблонами
+## License
 
-```bash
-# Показать список шаблонов
-zk template list
-
-# Создать новый шаблон
-zk template new meeting
-
-# Редактировать шаблон
-zk template edit meeting
-
-# Показать содержимое шаблона
-zk template show meeting
-```
-
-### Конфигурация
-
-```bash
-# Показать текущую конфигурацию
-zk config show
-
-# Изменить параметр конфигурации
-zk config set notes_dir ~/notes
-```
-
-## Формат заметок
-
-Заметки хранятся в формате Markdown с YAML-фронтматтером:
-
-```markdown
----
-id: abc123
-title: Название заметки
-created: 2024-01-01T12:00:00Z
-tags: [tag1, tag2]
-links:
-  - from: abc123
-    to: def456
-    description: Связанная тема
-description: Краткое описание заметки
----
-
-Содержимое заметки в формате Markdown...
-```
-
-## Обновление
-
-### Обновление из репозитория
-
-```bash
-# Обновить до последней версии
-cargo install --force --git https://github.com/IgorKramar/zk
-
-# Или, если репозиторий уже склонирован локально:
-cd path/to/zk
-git pull
-cargo install --force --path .
-```
-
-### Важно при обновлении
-
-1. Перед обновлением рекомендуется сделать резервную копию ваших заметок:
-```bash
-# Создать резервную копию
-cp -r ~/.zk/notes ~/.zk/notes_backup_$(date +%Y%m%d)
-```
-
-2. После обновления может потребоваться миграция данных. Следите за разделом [CHANGELOG.md](CHANGELOG.md) в репозитории.
-
-3. Если вы вносили изменения в конфигурацию или шаблоны, сохраните их копии перед обновлением:
-```bash
-cp ~/.zkrc ~/.zkrc_backup
-cp -r ~/.zk/templates ~/.zk/templates_backup
-```
-
-### Откат к предыдущей версии
-
-Если после обновления возникли проблемы, вы можете вернуться к предыдущей версии:
-
-```bash
-# В локальном репозитории
-git checkout <previous_version_tag>
-cargo install --force --path .
-```
-
-## Участие в разработке
-
-Мы рады любой помощи в развитии проекта! 
-
-### Как начать
-
-1. Форкните репозиторий
-2. Создайте ветку для вашей фичи (`git checkout -b feature/amazing-feature`)
-3. Зафиксируйте изменения (`git commit -m 'Add amazing feature'`)
-4. Отправьте изменения в ваш форк (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
-
-### На чём сфокусироваться
-
-Сейчас мы работаем над:
-- 📊 Визуализацией связей в консоли (ASCII-граф)
-- ✅ Поддержкой org-mode синтаксиса
-- 📅 Периодическими заметками
-
-### Рекомендации по разработке
-
-1. Следуйте существующему стилю кода
-2. Добавляйте тесты для новой функциональности
-3. Обновляйте документацию
-4. Используйте понятные сообщения коммитов
-
-### Сообщения об ошибках
-
-Если вы нашли баг:
-1. Убедитесь, что его ещё нет в Issues
-2. Используйте шаблон для баг-репорта
-3. Предоставьте подробное описание проблемы:
-   - Версия ZK
-   - Операционная система
-   - Шаги для воспроизведения
-   - Ожидаемое и фактическое поведение
-
-### Предложения по улучшению
-
-Новые идеи всегда приветствуются! Создайте Issue с тегом "enhancement" и опишите:
-- Какую проблему решает ваше предложение
-- Как это должно работать
-- Почему это будет полезно пользователям
-
-### Стиль кода
-
-- Используйте `cargo fmt` перед коммитом
-- Следуйте рекомендациям `clippy`
-- Документируйте публичные API
-- Пишите понятные комментарии на русском языке
-
-## Лицензия
-
-MIT
+TBD. The license will be chosen alongside the first published `format-v1`.
