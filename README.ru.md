@@ -66,4 +66,6 @@ git show HEAD:src/cli/mod.rs | less
 
 ## Лицензия
 
-TBD. Лицензия будет выбрана вместе с публикацией первой `format-v1`.
+[MIT](./LICENSE) © 2026 Igor Kramar.
+
+Лицензия для спецификации формата на диске (`format-v1`) — отдельное решение, которое будет принято при публикации спецификации; см. запись **A5** в [`decision-map.md`](./docs/architecture/decision-map.md).

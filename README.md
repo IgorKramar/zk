@@ -66,4 +66,6 @@ If the project is interesting in its current state, the most useful feedback is 
 
 ## License
 
-TBD. The license will be chosen alongside the first published `format-v1`.
+[MIT](./LICENSE) © 2026 Igor Kramar.
+
+The on-disk format specification (`format-v1`) will receive its own licensing decision when published — see decision **A5** in [`decision-map.md`](./docs/architecture/decision-map.md).
