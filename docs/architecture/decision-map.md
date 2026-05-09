@@ -13,8 +13,8 @@
 
 **A1. Note ID scheme + filename convention** (= Q1 в ARCHITECTURE.md)
 - *Forces*: human-readable vs collision-safe; sortable в `ls/git diff`; стабильность при переименовании; совместимость с file-system-as-graph.
-- *Status*: open
-- *Blocks*: A2, A3, A4, A5, B1, B2, C4, D1, D4
+- *Status*: **decided** — см. [ADR-0002](decisions/0002-note-id-scheme-and-filename-layout.md). ULID во frontmatter (canonical) + `<ULID>-<slug>.md` filename.
+- *Blocks*: A2, A3, A4, A5, B1, B2, C4, D1, D4 (все разблокированы)
 - *Blocked by*: —
 
 **A2. Link representation** (= Q2)
@@ -151,15 +151,14 @@
 Топологическая сортировка с учётом hard-dependencies. Сортировка внутри уровня — по reversibility (необратимое первым), blast radius (большее первым), information value (отвечает на больше других вопросов первым).
 
 **Уровень 0 (next up — unblocked)**
-- **A1. Note ID scheme** — стартовая точка. Необратима, blocks больше всего, открывает A2/A3/A4/A5.
-- **C1. TUI ↔ CLI-pipe boundary** — параллельно к A1: не блокируется ничем из Group A. Можно вести параллельный cycle.
+- **A2. Link representation** — следующий ADR-0003 после A1. Wikilink-syntax ↔ ID-resolver semantics; bundled-spirit с A1.
+- **A3. Frontmatter convention** — open после A1; полная schema полей.
+- **A4. Notes directory layout** — open после A1.
+- **C1. TUI ↔ CLI-pipe boundary** — параллельно: не блокируется ничем из Group A.
 
-*(D3 — имя проекта — закрыт [ADR-0001](decisions/0001-project-name-and-ecosystem-positioning.md): rename `zk` → `zetto`.)*
+*(A1 — ID-scheme — закрыт [ADR-0002](decisions/0002-note-id-scheme-and-filename-layout.md). D3 — имя проекта — закрыт [ADR-0001](decisions/0001-project-name-and-ecosystem-positioning.md).)*
 
-**Уровень 1 (после A1 решён)**
-- **A2. Link representation** — bundled с A1, либо сразу следом.
-- **A3. Frontmatter convention.**
-- **A4. Notes directory layout.**
+**Уровень 1 (после A2/A3/A4 закрыты)**
 
 **Уровень 2 (после Group A закрыт)**
 - **A5. Format versioning policy** — разрешать как замыкающий ADR группы A, фиксирующий контракт.
