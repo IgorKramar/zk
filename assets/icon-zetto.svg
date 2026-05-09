@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <clipPath id="squircle">
+      <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224"></rect>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#squircle)">
+    <rect width="1024" height="1024" fill="#1d2021"></rect>
+    <text x="512" y="700" font-family="&#39;Noto Sans JP&#39;, &#39;Hiragino Sans&#39;, &#39;Yu Gothic&#39;, sans-serif" font-size="720" font-weight="700" fill="#fabd2f" text-anchor="middle">ゼ</text>
+    <text x="512" y="880" font-family="&#39;JetBrains Mono&#39;, ui-monospace, monospace" font-size="64" font-weight="500" fill="#928374" text-anchor="middle" letter-spacing="12">ZETTO</text>
+  </g>
+  <rect x="1" y="1" width="1022" height="1022" rx="223" ry="223" fill="none" stroke="#000" stroke-opacity="0.4" stroke-width="2"></rect>
+</svg>
