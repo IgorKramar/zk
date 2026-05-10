@@ -21,7 +21,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/Rust-CE422B?style=flat-square&logo=rust&logoColor=white" alt="Rust" />
   &nbsp;
-  <a href="./docs/architecture/decisions/"><img src="https://img.shields.io/badge/ADRs-3-928374?style=flat-square" alt="ADRs: 3" /></a>
+  <a href="./docs/architecture/decisions/"><img src="https://img.shields.io/badge/ADRs-4-928374?style=flat-square" alt="ADRs: 4" /></a>
 </p>
 
 <p align="center">

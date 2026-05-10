@@ -26,9 +26,9 @@
 
 **A3. Frontmatter convention**
 - *Forces*: YAML (de-facto стандарт markdown PKM, совместим с Obsidian/Hugo) vs TOML (проще парсится, ближе к Rust-экосистеме) vs no frontmatter (всё в теле). Влияет на хранение метаданных: ID, title, теги, created, links.
-- *Status*: open (имплицитно)
-- *Blocks*: A5, B2 (parser), C4 (что вшивается при создании)
-- *Blocked by*: A1 (если ID хранится в frontmatter — формат должен это поддерживать)
+- *Status*: **decided** — см. [ADR-0004](decisions/0004-frontmatter-convention.md). YAML с required `id`/`title`, standard optional `tags`/`aliases`/`created`/`updated`, custom `x-*`, lenient + lint-warn, hand-rolled write.
+- *Blocks*: A5, B2 (parser), C4 — все разблокированы.
+- *Blocked by*: A1 (закрыт ADR-0002), implicitly A2 (закрыт ADR-0003 — `title:` обязателен per render-fallback).
 
 **A4. Notes directory layout**
 - *Forces*: single flat root vs id-prefix-buckets (`a/`, `b/`...) vs freeform (пользователь сам решает). STRATEGY запрещает «папки-как-таксономия» — но папки как операционный shard остаются на столе. Влияет на скорость FS-обхода и читаемость в `ls`.

@@ -6,6 +6,7 @@
 
 | # | Date | Status | Decision |
 |---|---|---|---|
+| [0004](./0004-frontmatter-convention.md) | 2026-05-09 | Accepted | Frontmatter convention: required `id`/`title`; standard optional `tags`/`aliases`/`created`/`updated`; `x-*` for extensions; lenient schema with lint warns; hand-rolled write |
 | [0003](./0003-link-representation.md) | 2026-05-09 | Accepted | Link representation: wikilink-primary `[[ULID]]` / `[[ULID|display]]`; canonical markdown read-compat; embeds/anchors/block-refs deferred to v2 with triggers |
 | [0002](./0002-note-id-scheme-and-filename-layout.md) | 2026-05-09 | Accepted | Note ID scheme and filename layout: ULID in YAML frontmatter, `<ULID>-<slug>.md` filename |
 | [0001](./0001-project-name-and-ecosystem-positioning.md) | 2026-05-09 | Accepted | Rename project from `zk` to `zetto` |
