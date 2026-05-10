@@ -21,7 +21,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/Rust-CE422B?style=flat-square&logo=rust&logoColor=white" alt="Rust" />
   &nbsp;
-  <a href="./docs/architecture/decisions/"><img src="https://img.shields.io/badge/ADRs-1-928374?style=flat-square" alt="ADRs: 1" /></a>
+  <a href="./docs/architecture/decisions/"><img src="https://img.shields.io/badge/ADRs-3-928374?style=flat-square" alt="ADRs: 3" /></a>
 </p>
 
 <p align="center">
@@ -96,7 +96,7 @@ Commits before `293a1e4` are part of the historical record; nothing prior to the
 
 This repository uses two complementary Claude Code plugins to drive the architectural and feature work:
 
-- **`archforge`** — architecture cycle (Discover → Research → Design → Decide → Document → Review). All architectural decisions live in `docs/architecture/`.
+- **[`archforge`](https://github.com/IgorKramar/archforge-marketplace)** — architecture cycle (Discover → Research → Design → Decide → Document → Review). All architectural decisions live in `docs/architecture/`.
 - **`compound-engineering`** — feature workflow (Brainstorm → Plan → Work → Review → Compound). Feature-level artifacts live in `docs/{ideation,brainstorms,plans,solutions}/`.
 
 The interleaving rules (when each cycle hands off to the other) live in [`AGENTS.md`](./AGENTS.md).
@@ -115,6 +115,6 @@ The on-disk format specification (`format-v1`) will receive its own licensing de
 
 <p align="center">
   <sub>Built with <a href="https://github.com/anthropics/claude-code">Claude Code</a> ·
-  Architecture by <a href="./docs/architecture/">archforge</a> ·
+  Architecture by <a href="https://github.com/IgorKramar/archforge-marketplace">archforge</a> ·
   Workflow by <a href="https://github.com/EveryInc/compound-engineering">compound-engineering</a></sub>
 </p>

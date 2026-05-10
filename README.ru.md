@@ -21,7 +21,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/Rust-CE422B?style=flat-square&logo=rust&logoColor=white" alt="Rust" />
   &nbsp;
-  <a href="./docs/architecture/decisions/"><img src="https://img.shields.io/badge/ADRs-1-928374?style=flat-square" alt="ADRs: 1" /></a>
+  <a href="./docs/architecture/decisions/"><img src="https://img.shields.io/badge/ADRs-3-928374?style=flat-square" alt="ADRs: 3" /></a>
 </p>
 
 <p align="center">
@@ -96,7 +96,7 @@ git show 293a1e4:src/cli/mod.rs    | less
 
 Репозиторий использует два дополняющих плагина Claude Code, ведущих архитектурную и фичевую работу:
 
-- **`archforge`** — архитектурный цикл (Discover → Research → Design → Decide → Document → Review). Все архитектурные решения живут в `docs/architecture/`.
+- **[`archforge`](https://github.com/IgorKramar/archforge-marketplace)** — архитектурный цикл (Discover → Research → Design → Decide → Document → Review). Все архитектурные решения живут в `docs/architecture/`.
 - **`compound-engineering`** — рабочий цикл уровня фичи (Brainstorm → Plan → Work → Review → Compound). Артефакты уровня фичи живут в `docs/{ideation,brainstorms,plans,solutions}/`.
 
 Правила чередования (когда один цикл передаёт другому) — в [`AGENTS.md`](./AGENTS.md).
@@ -115,6 +115,6 @@ git show 293a1e4:src/cli/mod.rs    | less
 
 <p align="center">
   <sub>Сделано с <a href="https://github.com/anthropics/claude-code">Claude Code</a> ·
-  архитектура — <a href="./docs/architecture/">archforge</a> ·
+  архитектура — <a href="https://github.com/IgorKramar/archforge-marketplace">archforge</a> ·
   рабочий процесс — <a href="https://github.com/EveryInc/compound-engineering">compound-engineering</a></sub>
 </p>
