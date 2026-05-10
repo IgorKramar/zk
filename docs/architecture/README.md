@@ -22,6 +22,7 @@ section 5.
 
 | # | Date | Status | Decision |
 |---|---|---|---|
+| [0003](./decisions/0003-link-representation.md) | 2026-05-09 | Accepted | Link representation: wikilink-primary `[[ULID]]` / `[[ULID|display]]`; markdown read-compat; embeds/anchors/block-refs deferred to v2 with triggers |
 | [0002](./decisions/0002-note-id-scheme-and-filename-layout.md) | 2026-05-09 | Accepted | Note ID scheme and filename layout: ULID in YAML frontmatter, `<ULID>-<slug>.md` filename |
 | [0001](./decisions/0001-project-name-and-ecosystem-positioning.md) | 2026-05-09 | Accepted | Rename project from `zk` to `zetto` |
 

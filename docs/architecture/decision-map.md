@@ -19,10 +19,10 @@
 
 **A2. Link representation** (= Q2)
 - *Forces*: parser complexity; interop с vim-плагинами/pandoc/mdbook; UX fuzzy-linking; поведение при rename.
-- *Status*: open
-- *Blocks*: B1, B2, C4, D4
-- *Blocked by*: A1 (синтаксис ссылок зависит от того, чем идентифицируется заметка — путём, ID, slug-ом)
-- *Mutual constraint with A1*: рассмотреть как bundled decision (или два очень близких ADR подряд).
+- *Status*: **decided** — см. [ADR-0003](decisions/0003-link-representation.md). Wikilink-primary `[[ULID]]` / `[[ULID|display]]` + canonical markdown read-compat; embeds/anchors/block-refs deferred to v2 with triggers.
+- *Blocks*: B1, B2, C4, D4 (все разблокированы)
+- *Blocked by*: A1 (закрыт ADR-0002)
+- *Mutual constraint with A1*: разрешён в виде двух последовательных ADR (ADR-0002 + ADR-0003).
 
 **A3. Frontmatter convention**
 - *Forces*: YAML (de-facto стандарт markdown PKM, совместим с Obsidian/Hugo) vs TOML (проще парсится, ближе к Rust-экосистеме) vs no frontmatter (всё в теле). Влияет на хранение метаданных: ID, title, теги, created, links.
@@ -151,12 +151,12 @@
 Топологическая сортировка с учётом hard-dependencies. Сортировка внутри уровня — по reversibility (необратимое первым), blast radius (большее первым), information value (отвечает на больше других вопросов первым).
 
 **Уровень 0 (next up — unblocked)**
-- **A2. Link representation** — следующий ADR-0003 после A1. Wikilink-syntax ↔ ID-resolver semantics; bundled-spirit с A1.
-- **A3. Frontmatter convention** — open после A1; полная schema полей.
-- **A4. Notes directory layout** — open после A1.
+- **A3. Frontmatter convention** — full schema полей; обязательность `title:` (подразумевается ADR-0003 для render-fallback) формализуется здесь; `aliases:` поле под D4=read-write — открытое решение внутри.
+- **A4. Notes directory layout** — single root vs id-prefix-buckets vs freeform.
+- **A5. Format versioning policy & public spec contract** — замыкающий ADR группы A.
 - **C1. TUI ↔ CLI-pipe boundary** — параллельно: не блокируется ничем из Group A.
 
-*(A1 — ID-scheme — закрыт [ADR-0002](decisions/0002-note-id-scheme-and-filename-layout.md). D3 — имя проекта — закрыт [ADR-0001](decisions/0001-project-name-and-ecosystem-positioning.md).)*
+*(A1 — ID-scheme — закрыт [ADR-0002](decisions/0002-note-id-scheme-and-filename-layout.md). A2 — link representation — закрыт [ADR-0003](decisions/0003-link-representation.md). D3 — имя проекта — закрыт [ADR-0001](decisions/0001-project-name-and-ecosystem-positioning.md).)*
 
 **Уровень 1 (после A2/A3/A4 закрыты)**
 

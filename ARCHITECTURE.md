@@ -112,6 +112,7 @@ L3-детализация конкретных модулей живёт в [`do
 
 | # | Date | Status | Decision |
 |---|---|---|---|
+| [0003](./docs/architecture/decisions/0003-link-representation.md) | 2026-05-09 | Accepted | Link representation: wikilink-primary `[[ULID]]` / `[[ULID|display]]`; markdown read-compat; embeds/anchors/block-refs deferred to v2 with triggers |
 | [0002](./docs/architecture/decisions/0002-note-id-scheme-and-filename-layout.md) | 2026-05-09 | Accepted | Note ID scheme and filename layout: ULID in YAML frontmatter, `<ULID>-<slug>.md` filename |
 | [0001](./docs/architecture/decisions/0001-project-name-and-ecosystem-positioning.md) | 2026-05-09 | Accepted | Rename project from `zk` to `zetto` |
 
@@ -124,7 +125,7 @@ ADR файлы живут в [`docs/architecture/decisions/`](./docs/architectur
 <!-- 5 seed-вопросов, выявленных при init. Каждый — кандидат на отдельный /archforge:cycle. -->
 
 - ~~**Q1. Схема ID заметок.**~~ — закрыт [ADR-0002](./docs/architecture/decisions/0002-note-id-scheme-and-filename-layout.md): ULID во frontmatter + `<ULID>-<slug>.md` filename.
-- **Q2. Синтаксис ссылок.** `[[wikilinks]]` (Obsidian-совместимость) vs canonical markdown `[text](path.md)` vs оба. Определяет сложность парсера, совместимость с vim-плагинами/pandoc/mdbook и обязательность собственного link-resolver.
+- ~~**Q2. Синтаксис ссылок.**~~ — закрыт [ADR-0003](./docs/architecture/decisions/0003-link-representation.md): wikilink-primary `[[ULID]]` / `[[ULID|display]]` + canonical markdown read-compat; embeds/anchors/block-refs deferred to v2.
 - **Q3. Хранилище графа/индекса.** In-memory rebuild при каждом запуске (zero state, but cold-start cost) vs persistent index (sqlite/sled/JSON sidecar — быстро, но invalidation и sync). Критично для Capture latency и Note graph engine track.
 - **Q4. Граница TUI vs CLI-pipe.** Какие операции — только TUI (живая навигация, fuzzy-linking графа) vs композируемые pipe-friendly CLI (`zetto list`, `zetto new`, `zetto lint`). Это контракт Toolchain interop track и определяет, можно ли использовать `zetto` из shell-скриптов и редакторных плагинов.
 - **Q5. Степень принуждения constraints.** `zetto new` *блокирует* сохранение без исходящей ссылки vs предупреждает vs только flag в `zetto lint`. Прямой trade-off между Capture latency (быстрее = меньше принуждения) и Orphan-note ratio (строже = ниже orphan rate). Определяет, воспринимается ли Methodology enforcement как помощь или как враждебность.
